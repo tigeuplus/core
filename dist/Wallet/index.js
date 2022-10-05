@@ -75,16 +75,16 @@ class Wallet {
         (0, node_schedule_1.scheduleJob)('3 * * * * *', async () => {
             let spiders = (0, Cobweb_1.anyToSpiders)(parse(stringify(this.cobweb.spiders)));
             for (let i = 0; Object.keys(spiders).length; i++)
-                if (spiders[Object.keys(spiders)[i]].approvals.length >= 100) {
-                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].approvals.length; j++) {
+                if (spiders[Object.keys(spiders)[i]].targets.length >= 100) {
+                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].targets.length; j++) {
                         delete this.cobweb.spiders[Object.keys(spiders)[i]];
-                        if (spiders[spiders[Object.keys(spiders)[i]].approvals[j].hash].approvals.length === 0)
-                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].approvals[j].hash];
+                        if (spiders[spiders[Object.keys(spiders)[i]].targets[j]].targets.length === 0)
+                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].targets[j]];
                         else
-                            for (let k = 0; k < spiders[Object.keys(spiders)[i]].approvals.length; k++)
-                                if (spiders[Object.keys(spiders)[i]].approvals[k].hash !== spiders[Object.keys(spiders)[i]].approvals[j].hash)
-                                    if ((spiders[spiders[Object.keys(spiders)[i]].approvals[j].hash].approvals.length - spiders[spiders[Object.keys(spiders)[i]].approvals[k].hash].approvals.length) >= 10) {
-                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].approvals[j].hash];
+                            for (let k = 0; k < spiders[Object.keys(spiders)[i]].targets.length; k++)
+                                if (spiders[Object.keys(spiders)[i]].targets[k] !== spiders[Object.keys(spiders)[i]].targets[j])
+                                    if ((spiders[spiders[Object.keys(spiders)[i]].targets[j]].targets.length - spiders[spiders[Object.keys(spiders)[i]].targets[k]].targets.length) >= 10) {
+                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].targets[j]];
                                         break;
                                     }
                     }
@@ -121,20 +121,20 @@ class Wallet {
         return 0n;
     }
     send(transfers) {
-        this.broadcast(stringify(new Command_1.Command('Add_Transaction', new Cobweb_1.Transaction(this.address, transfers, this.calculateApprovalTransaction()))));
+        this.broadcast(stringify(new Command_1.Command('Add_Transaction', new Cobweb_1.Transaction(this.address, transfers, this.calculateTargetTransaction()))));
     }
     broadcast(message) {
         for (let i = 0; i < Object.keys(this.peers).length; i++)
             this.peers[Object.keys(this.peers)[i]].websocket.send(message);
     }
-    calculateApprovalTransaction() {
-        let confidences = {};
+    calculateTargetTransaction() {
+        let spiders = {};
         for (let i = 0; i < 100; i++) {
-            let spiders = Object.keys(this.cobweb.spiders).sort((a, b) => this.cobweb.spiders[b].approvals.length - this.cobweb.spiders[a].approvals.length);
+            let hash = Object.keys(this.cobweb.spiders).sort((a, b) => this.cobweb.spiders[b].targets.length - this.cobweb.spiders[a].targets.length);
             let candidates = [[], []];
-            candidates[1] = spiders;
-            for (let j = 0; j < (Math.floor(spiders.length / 9) + 1); j++)
-                candidates[0][j] = spiders[j];
+            candidates[1] = hash;
+            for (let j = 0; j < (Math.floor(hash.length / 9) + 1); j++)
+                candidates[0][j] = hash[j];
             let transactions = [];
             for (; transactions.length === 1;) {
                 let j = Math.floor(Math.random() * candidates[Math.min(transactions.length, 1)].length);
@@ -142,13 +142,13 @@ class Wallet {
                     transactions.push(candidates[Math.min(transactions.length, 1)][i]);
             }
             for (let j = 0; j < transactions.length; j++)
-                if (confidences[transactions[j]])
-                    confidences[transactions[j]] += 1;
+                if (spiders[transactions[j]])
+                    spiders[transactions[j]] += 1;
                 else
-                    confidences[transactions[j]] = 1;
+                    spiders[transactions[j]] = 1;
         }
-        let ascending = Object.keys(confidences).sort((a, b) => confidences[b] - confidences[a]);
-        return [{ hash: ascending[0], confidence: confidences[ascending[0]] }, { hash: ascending[1], confidence: confidences[ascending[1]] }];
+        let ascending = Object.keys(spiders).sort((a, b) => spiders[b] - spiders[a]);
+        return [ascending[0], ascending[1]];
     }
     async onConnection(websocket, request) {
         websocket.on('close', () => this.onClose(request.headers.host));
@@ -177,15 +177,33 @@ class Wallet {
                 case 'Add_Transaction':
                     let transaction = (0, Cobweb_1.anyToTransaction)(command.data);
                     if (transaction)
-                        if (this.isTransactionValid(transaction))
+                        if (this.isTransactionTypeValid(transaction))
                             this.cobweb.add(transaction);
                     break;
             }
     }
-    isTransactionValid(transaction) {
-        for (let i = 0; i < transaction.approvals.length; i++)
-            if (!this.cobweb.spiders[transaction.approvals[i].hash])
+    isTransactionTypeValid(transaction) {
+        for (let i = 0; i < transaction.targets.length; i++)
+            if (!this.cobweb.spiders[transaction.targets[i]])
                 return false;
+        return (0, Cobweb_1.isTransactionValid)(transaction);
+    }
+    isTransactionValid(transaction, spider = false) {
+        if (spider)
+            for (let i = 0; i < transaction.targets.length; i++) {
+                let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
+                if (t)
+                    if (!this.isTransactionValid(t, true))
+                        return false;
+            }
+        else
+            for (let i = 0; i < transaction.targets.length; i++) {
+                let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
+                if (!t)
+                    return false;
+                else if (!this.isTransactionValid(t, true))
+                    return false;
+            }
         return (0, Cobweb_1.isTransactionValid)(transaction);
     }
     onClose(url) {

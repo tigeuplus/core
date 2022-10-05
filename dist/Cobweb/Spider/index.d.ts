@@ -1,14 +1,8 @@
 import { Transaction } from './Transction';
 export declare class Spider {
     transaction: Transaction;
-    approvals: {
-        hash: string;
-        confidence: number;
-    }[];
-    constructor(transaction: Transaction, approvals?: {
-        hash: string;
-        confidence: number;
-    }[]);
+    targets: string[];
+    constructor(transaction: Transaction, targets?: string[]);
 }
 export declare function isSpiderTypeValid(data: any): boolean;
 export declare function anyToSpider(data: any): Spider | undefined;

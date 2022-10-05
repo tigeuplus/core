@@ -27,16 +27,16 @@ export class Cobweb
 
     public add(transaction: Transaction): boolean
     {
-        for (let i: number = 0; i < transaction.approvals.length; i ++)
-            if (!this.spiders[transaction.approvals[i].hash])
+        for (let i: number = 0; i < transaction.targets.length; i ++)
+            if (!this.spiders[transaction.targets[i]])
                 return false
 
-        for (let i: number = 0; i < transaction.approvals.length; i ++)
-            if (!(this.spiders[transaction.approvals[i].hash].approvals instanceof Array))
+        for (let i: number = 0; i < transaction.targets.length; i ++)
+            if (!(this.spiders[transaction.targets[i]].targets instanceof Array))
                 return false
     
-        for (let i: number = 0; i < transaction.approvals.length; i ++)
-            this.spiders[transaction.approvals[i].hash].approvals!.push(transaction.approvals[i])
+        for (let i: number = 0; i < transaction.targets.length; i ++)
+            this.spiders[transaction.targets[i]].targets!.push(transaction.targets[i])
 
         this.spiders[transaction.hash] = new Spider(transaction)
         return true

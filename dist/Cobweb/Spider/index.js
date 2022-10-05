@@ -4,22 +4,19 @@ exports.calculateTransactionNonce = exports.calculateTransactionHash = exports.T
 const Transction_1 = require("./Transction");
 class Spider {
     transaction;
-    approvals;
-    constructor(transaction, approvals) {
+    targets;
+    constructor(transaction, targets) {
         this.transaction = transaction;
-        this.approvals = (approvals || []);
+        this.targets = (targets || []);
     }
 }
 exports.Spider = Spider;
 function isSpiderTypeValid(data) {
     if (data instanceof Object)
-        if (data.approvals instanceof Array) {
-            for (let i = 0; i < data.approvals.length; i++)
-                if (data.approvals[i] instanceof Object)
-                    if (typeof data.approvals[i].hash !== 'string' || typeof data.approvals[i].confidence !== 'number')
-                        return false;
-                    else
-                        return false;
+        if (data.targets instanceof Array) {
+            for (let i = 0; i < data.targets.length; i++)
+                if (typeof data.targets[i] !== 'string')
+                    return false;
             return (0, Transction_1.isTransactionTypeValid)(data.transaction);
         }
     return false;
@@ -27,7 +24,7 @@ function isSpiderTypeValid(data) {
 exports.isSpiderTypeValid = isSpiderTypeValid;
 function anyToSpider(data) {
     if (isSpiderTypeValid(data))
-        return new Spider((0, Transction_1.anyToTransaction)(data.transaction), data.approvals);
+        return new Spider((0, Transction_1.anyToTransaction)(data.transaction), data.targets);
 }
 exports.anyToSpider = anyToSpider;
 var Transction_2 = require("./Transction");

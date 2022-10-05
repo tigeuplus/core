@@ -22,16 +22,11 @@ export declare class Wallet {
     getBalance(address: string): bigint;
     send(transfers: Transfer[]): void;
     broadcast(message: string): void;
-    calculateApprovalTransaction(): [{
-        hash: string;
-        confidence: number;
-    }, {
-        hash: string;
-        confidence: number;
-    }];
+    calculateTargetTransaction(): [string, string];
     onConnection(websocket: WebSocket, request: IncomingMessage): Promise<void>;
     onMessage(websocket: WebSocket, url: string, data: any): Promise<void>;
-    isTransactionValid(transaction: Transaction): boolean;
+    isTransactionTypeValid(transaction: Transaction): boolean;
+    isTransactionValid(transaction: Transaction, spider?: boolean): boolean;
     onClose(url: string): void;
     init(websocket: WebSocket, url: string): Promise<void>;
     getBalances(websocket: WebSocket): Promise<{

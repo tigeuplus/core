@@ -10,13 +10,13 @@ function stringify(data) {
 class Transaction {
     hash;
     author;
-    approvals;
+    targets;
     transfers;
     nonce;
-    constructor(author, transfers, approvals, nonce, hash) {
+    constructor(author, transfers, targets, nonce, hash) {
         this.author = author;
         this.transfers = transfers;
-        this.approvals = approvals;
+        this.targets = targets;
         this.nonce = (nonce || calculateTransactionNonce(this));
         this.hash = (hash || calculateTransactionHash(this));
     }
@@ -34,13 +34,10 @@ function isPrime(num) {
 }
 function isTransactionTypeValid(data) {
     if (data instanceof Object)
-        if (data.approvals instanceof Array) {
-            for (let i = 0; i < data.approvals.length; i++)
-                if (data.approvals[i] instanceof Object)
-                    if (typeof data.approvals[i].hash !== 'string' || typeof data.approvals[i].confidence !== 'number')
-                        return false;
-                    else
-                        return false;
+        if (data.targets instanceof Array) {
+            for (let i = 0; i < data.targets.length; i++)
+                if (typeof data.targets[i] !== 'string')
+                    return false;
             if (data.transfers instanceof Array) {
                 for (let i = 0; i < data.transfers.length; i++)
                     if (!(0, Transfer_1.isTransferTypeValid)(data.transfers[i]))
@@ -56,7 +53,7 @@ function anyToTransaction(data) {
         let transfers = [];
         for (let i = 0; i < data.transfers.length; i++)
             transfers.push((0, Transfer_1.anyToTransfer)(data.transfers[i]));
-        return new Transaction(data.author, transfers, data.approvals, data.nonce, data.hash);
+        return new Transaction(data.author, transfers, data.targets, data.nonce, data.hash);
     }
 }
 exports.anyToTransaction = anyToTransaction;
@@ -88,7 +85,7 @@ function isTransactionHashValid(transaction) {
 }
 exports.isTransactionHashValid = isTransactionHashValid;
 function isTransactionNonceValid(transaction) {
-    return transaction.nonce === calculateTransactionNonce(transaction);
+    return hexToBinary(calculateTransactionHash(transaction)).startsWith('0'.repeat(20));
 }
 exports.isTransactionNonceValid = isTransactionNonceValid;
 function isTransactionValid(transaction) {

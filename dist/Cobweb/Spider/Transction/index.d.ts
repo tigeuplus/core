@@ -2,22 +2,10 @@ import { Transfer } from './Transfer';
 export declare class Transaction {
     hash: string;
     author: string;
-    approvals: [{
-        hash: string;
-        confidence: number;
-    }, {
-        hash: string;
-        confidence: number;
-    }];
+    targets: [string, string];
     transfers: Transfer[];
     nonce: number;
-    constructor(author: string, transfers: Transfer[], approvals: [{
-        hash: string;
-        confidence: number;
-    }, {
-        hash: string;
-        confidence: number;
-    }], nonce?: number, hash?: string);
+    constructor(author: string, transfers: Transfer[], targets: [string, string], nonce?: number, hash?: string);
 }
 export declare function isTransactionTypeValid(data: any): boolean;
 export declare function anyToTransaction(data: any): Transaction | undefined;
