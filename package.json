@@ -1,0 +1,25 @@
+{
+    "name": "@tigeuplus/core",
+    "version": "v1.0.0-alpha",
+    "description": "장소, 성능 상관없이",
+    "main": "dist/index.js",
+    "private": false,
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "author": "cobeol <cobeol0111@gmail.com>",
+    "license": "MIT",
+    "dependencies": {
+        "@tigeu/class": "^2.1.0",
+        "elliptic": "^6.5.4",
+        "node-schedule": "^2.1.0",
+        "ws": "^8.8.1"
+    },
+    "devDependencies": {
+        "@types/elliptic": "^6.4.14",
+        "@types/node": "^18.7.18",
+        "@types/node-schedule": "^2.1.0",
+        "@types/ws": "^8.5.3"
+    }
+}
