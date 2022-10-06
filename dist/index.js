@@ -14,8 +14,6 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Wallet = void 0;
-var Wallet_1 = require("./Wallet");
-Object.defineProperty(exports, "Wallet", { enumerable: true, get: function () { return Wallet_1.Wallet; } });
+__exportStar(require("./Wallet"), exports);
 __exportStar(require("./Cobweb"), exports);
 //# sourceMappingURL=index.js.map

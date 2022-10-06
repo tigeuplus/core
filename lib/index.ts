@@ -1,2 +1,2 @@
-export { Wallet } from './Wallet'
+export * from './Wallet'
 export * from './Cobweb'

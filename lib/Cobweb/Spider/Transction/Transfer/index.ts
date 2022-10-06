@@ -5,16 +5,69 @@ function stringify(data: any): string
     return JSON.stringify(data, (key: string, value: any) => typeof value === 'bigint' ? `${value.toString()}n` : value)
 }
 
+/**
+ * 전송 데이터
+ * 
+ * @since v1.0.0-alpha
+ * @param from 전송자
+ * @param to 수신자
+ * @param value 수량
+ * @param timestamp 생성된 시간
+ * @param memo 메모
+ * @param signature 서명
+*/
 export class Transfer
 {
+    /**
+     * 수신자
+     */
     public from: string
+    /**
+     * 전송자
+     */
     public to: string
+    /**
+     * 수량
+     */
     public value: bigint
+    /**
+     * 메모
+     */
     public memo: string
+    /**
+     * 생성된 시간
+     */
     public timestamp: number
+    /**
+     * 서명
+     */
     public signature: string
 
-    constructor(from: string, to: string, value: bigint, timestamp: number, memo: string, signature: string)
+    constructor(
+        /**
+         * 수신자
+         */
+        from: string, 
+        /**
+         * 전송자
+         */
+        to: string, 
+        /**
+         * 수량
+         */
+        value: bigint, 
+        /**
+         * 메모 
+         * */ 
+        memo: string,
+        /**
+         * 생성된 시간
+         */
+        timestamp: number = new Date().getTime(),
+        /**
+         * 서명 
+         */ 
+        signature: string = '')
     {
         this.from = from
         this.to = to
@@ -25,6 +78,39 @@ export class Transfer
     }
 }
 
+/**
+ * 전송 데이터를 서명합니다
+ * 
+ * @since v1.0.0-alpha.2
+ * @param transfer 전송 데이터
+ * @param privatekey 개인키
+ * @return string | undefined
+*/
+export function calculateTransferSignature(
+    /**
+     * 전송 데이터
+     */
+    transfer: Transfer, 
+    /**
+     * 개인키
+     */
+    privatekey: string): string | undefined
+{
+    try
+    {
+        transfer.signature = ''
+        return stringify(new ec('secp256k1').keyFromPrivate(privatekey).sign(stringify(transfer)))
+    }
+    catch (error: any) {}
+}
+
+/**
+ * 데이터가 전송 데이터인지 확인합니다
+ * 
+ * @since v1.0.0-alpha
+ * @param data
+ * @returns boolean
+ */
 export function isTransferTypeValid(data: any): boolean
 {
     if (data instanceof Object)
@@ -33,13 +119,31 @@ export function isTransferTypeValid(data: any): boolean
     return false
 }
 
+/**
+ * 데이터를 전송 데이터로 변환합니다
+ * 
+ * @since v1.0.0-alpha
+ * @param data 
+ * @returns Transfer | undefined
+ */
 export function anyToTransfer(data: any): Transfer | undefined
 {
     if (isTransferTypeValid(data))
         return new Transfer(data.from, data.to, data.value, data.timestamp, data.memo, data.signature)
 }
 
-export function isTransferSignatureValid(transfer: Transfer): boolean
+/**
+ * 전송 데이터의 서명을 검증합니다
+ * 
+ * @since v1.0.0-alpha
+ * @param transfer 전송 데이터
+ * @returns boolean
+ */
+export function isTransferSignatureValid(
+    /**
+     * 전송 데이터
+     */
+    transfer: Transfer): boolean
 {
     let signature: string = String(transfer.signature)
     transfer.signature = ''
@@ -47,7 +151,18 @@ export function isTransferSignatureValid(transfer: Transfer): boolean
     return new ec('secp256k1').keyFromPublic(transfer.from, 'hex').verify(stringify(transfer), signature)
 }
 
-export function isTransferValid(transfer: Transfer): boolean
+/**
+ * 전송 데이터가 올바른지 확인합니다
+ * 
+ * @since v1.0.0-alpha
+ * @param transfer 전송 데이터
+ * @returns boolean
+ */
+export function isTransferValid(
+    /**
+     * 전송 데이터
+     */
+    transfer: Transfer): boolean
 {
     if (isTransferSignatureValid(transfer))
         return true

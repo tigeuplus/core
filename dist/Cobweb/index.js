@@ -1,22 +1,46 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calculateTransactionNonce = exports.calculateTransactionHash = exports.Transfer = exports.Spider = exports.Transaction = exports.anyToTransfer = exports.anyToSpider = exports.anyToTransaction = exports.isTransferValid = exports.isTransferTypeValid = exports.isTransferSignatureValid = exports.isTransactionValid = exports.isTransactionTypeValid = exports.isTransactionTransfersValid = exports.isSpiderTypeValid = exports.isTransactionNonceValid = exports.isTransactionHashValid = exports.anyToSpiders = exports.isSpidersTypeValid = exports.Cobweb = void 0;
+exports.anyToSpiders = exports.isSpidersTypeValid = exports.Cobweb = void 0;
 const Spider_1 = require("./Spider");
-function stringify(data) {
-    return JSON.stringify(data, (key, value) => typeof value === 'bigint' ? `${value.toString()}n` : value);
-}
-function parse(data) {
-    return JSON.parse(data, (key, value) => {
-        if (typeof value === 'string' && /^\d+n$/.test(value))
-            return BigInt(value.slice(0, value.length - 1));
-        return value;
-    });
-}
+/**
+ * 코브웹
+ *
+ * @since v1.0.0-alpha
+ * @param spiders 스파이더
+ */
 class Cobweb {
+    /**
+     * 스파이더
+     */
     spiders;
-    constructor(spiders) {
+    constructor(
+    /**
+     * 스파이더
+     */
+    spiders) {
         this.spiders = (spiders || {});
     }
+    /**
+     * 새로운 거래를 추가합니다
+     *
+     * @since v1.0.0-alpha
+     * @param transaction 거래
+     * @returns boolean
+     */
     add(transaction) {
         for (let i = 0; i < transaction.targets.length; i++)
             if (!this.spiders[transaction.targets[i]])
@@ -31,6 +55,13 @@ class Cobweb {
     }
 }
 exports.Cobweb = Cobweb;
+/**
+ * 데이터가 스파이더인지 검증합니다
+ *
+ * @since v1.0.0-alpha
+ * @param data
+ * @returns boolean
+ */
 function isSpidersTypeValid(data) {
     if (data instanceof Object) {
         for (let i = 0; i < Object.keys(data).length; i++)
@@ -41,6 +72,13 @@ function isSpidersTypeValid(data) {
     return false;
 }
 exports.isSpidersTypeValid = isSpidersTypeValid;
+/**
+ * 데이터를 스파이더로 변환합니다
+ *
+ * @since v1.0.0-alpha
+ * @param data
+ * @returns { [ index: string ]: Spider } | undefined
+ */
 function anyToSpiders(data) {
     if (isSpidersTypeValid(data)) {
         let spiders = {};
@@ -50,22 +88,5 @@ function anyToSpiders(data) {
     }
 }
 exports.anyToSpiders = anyToSpiders;
-var Spider_2 = require("./Spider");
-Object.defineProperty(exports, "isTransactionHashValid", { enumerable: true, get: function () { return Spider_2.isTransactionHashValid; } });
-Object.defineProperty(exports, "isTransactionNonceValid", { enumerable: true, get: function () { return Spider_2.isTransactionNonceValid; } });
-Object.defineProperty(exports, "isSpiderTypeValid", { enumerable: true, get: function () { return Spider_2.isSpiderTypeValid; } });
-Object.defineProperty(exports, "isTransactionTransfersValid", { enumerable: true, get: function () { return Spider_2.isTransactionTransfersValid; } });
-Object.defineProperty(exports, "isTransactionTypeValid", { enumerable: true, get: function () { return Spider_2.isTransactionTypeValid; } });
-Object.defineProperty(exports, "isTransactionValid", { enumerable: true, get: function () { return Spider_2.isTransactionValid; } });
-Object.defineProperty(exports, "isTransferSignatureValid", { enumerable: true, get: function () { return Spider_2.isTransferSignatureValid; } });
-Object.defineProperty(exports, "isTransferTypeValid", { enumerable: true, get: function () { return Spider_2.isTransferTypeValid; } });
-Object.defineProperty(exports, "isTransferValid", { enumerable: true, get: function () { return Spider_2.isTransferValid; } });
-Object.defineProperty(exports, "anyToTransaction", { enumerable: true, get: function () { return Spider_2.anyToTransaction; } });
-Object.defineProperty(exports, "anyToSpider", { enumerable: true, get: function () { return Spider_2.anyToSpider; } });
-Object.defineProperty(exports, "anyToTransfer", { enumerable: true, get: function () { return Spider_2.anyToTransfer; } });
-Object.defineProperty(exports, "Transaction", { enumerable: true, get: function () { return Spider_2.Transaction; } });
-Object.defineProperty(exports, "Spider", { enumerable: true, get: function () { return Spider_2.Spider; } });
-Object.defineProperty(exports, "Transfer", { enumerable: true, get: function () { return Spider_2.Transfer; } });
-Object.defineProperty(exports, "calculateTransactionHash", { enumerable: true, get: function () { return Spider_2.calculateTransactionHash; } });
-Object.defineProperty(exports, "calculateTransactionNonce", { enumerable: true, get: function () { return Spider_2.calculateTransactionNonce; } });
+__exportStar(require("./Spider"), exports);
 //# sourceMappingURL=index.js.map

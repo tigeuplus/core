@@ -1,16 +1,58 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.calculateTransactionNonce = exports.calculateTransactionHash = exports.Transfer = exports.Transaction = exports.anyToTransfer = exports.anyToTransaction = exports.isTransferValid = exports.isTransferTypeValid = exports.isTransferSignatureValid = exports.isTransactionValid = exports.isTransactionTypeValid = exports.isTransactionTransfersValid = exports.isTransactionNonceValid = exports.isTransactionHashValid = exports.anyToSpider = exports.isSpiderTypeValid = exports.Spider = void 0;
+exports.anyToSpider = exports.isSpiderTypeValid = exports.Spider = void 0;
 const Transction_1 = require("./Transction");
+/**
+ * 스파이더
+ *
+ * @since v1.0.0-alpha
+ * @param transaction 거래
+ * @param targets 대상
+ */
 class Spider {
+    /**
+     * 거래
+     */
     transaction;
+    /**
+     * 대상
+     */
     targets;
-    constructor(transaction, targets) {
+    constructor(
+    /**
+     * 거래
+     */
+    transaction, 
+    /**
+     * 대상
+     */
+    targets = []) {
         this.transaction = transaction;
-        this.targets = (targets || []);
+        this.targets = targets;
     }
 }
 exports.Spider = Spider;
+/**
+ * 데이터가 스파이더인지 검증합니다
+ *
+ * @since v1.0.0-alpha
+ * @param data
+ * @returns boolean
+ */
 function isSpiderTypeValid(data) {
     if (data instanceof Object)
         if (data.targets instanceof Array) {
@@ -22,24 +64,17 @@ function isSpiderTypeValid(data) {
     return false;
 }
 exports.isSpiderTypeValid = isSpiderTypeValid;
+/**
+ * 데이터를 스파이더로 변환합니다
+ *
+ * @since v1.0.0-alpha
+ * @param data
+ * @returns Spider | undefined
+ */
 function anyToSpider(data) {
     if (isSpiderTypeValid(data))
         return new Spider((0, Transction_1.anyToTransaction)(data.transaction), data.targets);
 }
 exports.anyToSpider = anyToSpider;
-var Transction_2 = require("./Transction");
-Object.defineProperty(exports, "isTransactionHashValid", { enumerable: true, get: function () { return Transction_2.isTransactionHashValid; } });
-Object.defineProperty(exports, "isTransactionNonceValid", { enumerable: true, get: function () { return Transction_2.isTransactionNonceValid; } });
-Object.defineProperty(exports, "isTransactionTransfersValid", { enumerable: true, get: function () { return Transction_2.isTransactionTransfersValid; } });
-Object.defineProperty(exports, "isTransactionTypeValid", { enumerable: true, get: function () { return Transction_2.isTransactionTypeValid; } });
-Object.defineProperty(exports, "isTransactionValid", { enumerable: true, get: function () { return Transction_2.isTransactionValid; } });
-Object.defineProperty(exports, "isTransferSignatureValid", { enumerable: true, get: function () { return Transction_2.isTransferSignatureValid; } });
-Object.defineProperty(exports, "isTransferTypeValid", { enumerable: true, get: function () { return Transction_2.isTransferTypeValid; } });
-Object.defineProperty(exports, "isTransferValid", { enumerable: true, get: function () { return Transction_2.isTransferValid; } });
-Object.defineProperty(exports, "anyToTransaction", { enumerable: true, get: function () { return Transction_2.anyToTransaction; } });
-Object.defineProperty(exports, "anyToTransfer", { enumerable: true, get: function () { return Transction_2.anyToTransfer; } });
-Object.defineProperty(exports, "Transaction", { enumerable: true, get: function () { return Transction_2.Transaction; } });
-Object.defineProperty(exports, "Transfer", { enumerable: true, get: function () { return Transction_2.Transfer; } });
-Object.defineProperty(exports, "calculateTransactionHash", { enumerable: true, get: function () { return Transction_2.calculateTransactionHash; } });
-Object.defineProperty(exports, "calculateTransactionNonce", { enumerable: true, get: function () { return Transction_2.calculateTransactionNonce; } });
+__exportStar(require("./Transction"), exports);
 //# sourceMappingURL=index.js.map

@@ -41,16 +41,65 @@ function parse(data) {
         return value;
     });
 }
+/**
+ * 지갑
+ *
+ * @since v1.0.0-alpha
+ * @param storage 저장 경로
+ * @param timeout 타임아웃
+ * @param port 포트
+ * @param url 기존 피어 주소
+ */
 class Wallet {
+    /**
+     * 주소
+     */
     address;
+    /**
+     * 개인키
+     */
     privatekey;
+    /**
+     * 잔액
+     */
     balance;
+    /**
+     * 코브웹
+     */
     cobweb;
+    /**
+     * 웹소켓 서버
+     */
     server;
+    /**
+     * 피어
+     */
     peers;
+    /**
+     * 저장 경로
+     */
     storage;
+    /**
+     * 타임아웃
+     */
     timeout;
-    constructor(storage, timeout, port, url) {
+    constructor(
+    /**
+     * 저장 경로
+     */
+    storage, 
+    /**
+     * 타임아웃
+     */
+    timeout, 
+    /**
+     * 포트
+     */
+    port, 
+    /**
+     * 주소
+     */
+    url) {
         this.storage = storage;
         this.timeout = timeout;
         this.server = new ws_1.Server({ port: (port || 6001) });
@@ -104,29 +153,87 @@ class Wallet {
                 }
         });
     }
-    deleteBalance(address) {
+    /**
+     * 잔액을 삭제합니다
+     *
+     * @since v1.0.0-alpha
+     * @param address 주소
+     */
+    deleteBalance(
+    /**
+     * 주소
+     */
+    address) {
         try {
             (0, fs_1.unlinkSync)(path.join(this.storage, 'snapshots', `${address}.json`));
         }
         catch (error) { }
     }
-    saveBalance(address, balance) {
+    /**
+     * 잔액을 저장합니다
+     *
+     * @since v1.0.0-alpha
+     * @param address 주소
+     * @param balance 잔액
+     */
+    saveBalance(
+    /**
+     * 주소
+     */
+    address, 
+    /**
+     * 잔액
+     */
+    balance) {
         (0, fs_1.writeFileSync)(path.join(this.storage, 'snapshots', `${address}.json`), stringify(balance), { encoding: 'utf8' });
     }
-    getBalance(address) {
+    /**
+     * 잔액을 가져옵니다
+     *
+     * @since v1.0.0-alpha
+     * @param address 주소
+     * @returns bigint
+     */
+    getBalance(
+    /**
+     * 주소
+     */
+    address) {
         try {
             return parse(stringify((0, fs_1.readFileSync)(path.join(this.storage, 'snapshots', `${address}.json`), { encoding: 'utf8' })));
         }
         catch (erro) { }
         return 0n;
     }
-    send(transfers) {
+    /**
+     * 전송합니다
+     *
+     * @since v1.0.0-alpha
+     * @param transfers 전송 데이터
+     */
+    send(
+    /**
+     * 전송 데이터
+     */
+    transfers) {
         this.broadcast(stringify(new Command_1.Command('Add_Transaction', new Cobweb_1.Transaction(this.address, transfers, this.calculateTargetTransaction()))));
     }
+    /**
+     * 모든 피어에게 데이터를 전송합니다
+     *
+     * @since v1.0.0-alpha
+     * @param message 데이터
+     */
     broadcast(message) {
         for (let i = 0; i < Object.keys(this.peers).length; i++)
             this.peers[Object.keys(this.peers)[i]].websocket.send(message);
     }
+    /**
+     * 대상 거래를 계산합니다
+     *
+     * @since v1.0.0-alpha
+     * @returns [ string, string ]
+     */
     calculateTargetTransaction() {
         let spiders = {};
         for (let i = 0; i < 100; i++) {
@@ -228,7 +335,18 @@ class Wallet {
             (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
         }
     }
-    getBalances(websocket) {
+    /**
+     * 모든 잔액을 가져옵니다
+     *
+     * @since v1.0.0-alpha
+     * @param websocket
+     * @returns Promise<{ [ index: string ]: bigint } | undefined>
+     */
+    getBalances(
+    /**
+     * 웹소켓
+     */
+    websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
@@ -262,7 +380,18 @@ class Wallet {
             websocket.send(stringify(new Command_1.Command('Get_Balances')));
         });
     }
-    getSpiders(websocket) {
+    /**
+     * 모든 스파이더를 가져옵니댜
+     *
+     * @since v1.0.0-alpha
+     * @param websocket
+     * @returns Promise<{ [ index: string ]: Spider} | undefined>
+     */
+    getSpiders(
+    /**
+     * 웹소켓
+     */
+    websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
@@ -296,7 +425,27 @@ class Wallet {
             websocket.send(stringify(new Command_1.Command('Get_Spiders', this.address)));
         });
     }
-    addPeer(websocket, url, peers) {
+    /**
+     * 피어를 추가합니다
+     *
+     * @since v1.0.0-alpha
+     * @param websocket 웹소켓
+     * @param url 주소
+     * @param peers 피어 리스트
+     */
+    addPeer(
+    /**
+     * 웹소켓
+     */
+    websocket, 
+    /**
+     * 주소
+     */
+    url, 
+    /**
+     * 피어 리스트
+     */
+    peers) {
         return new Promise((resolve, reject) => {
             for (let i = 0; i < Object.keys(peers).length; i++)
                 if (Object.keys(peers)[i] === url)
@@ -308,7 +457,18 @@ class Wallet {
                 }
         });
     }
-    getPeers(websocket) {
+    /**
+     * 모든 피어를 가져갑니다
+     *
+     * @since v1.0.0-alpha
+     * @param websocket 웹소켓
+     * @returns Promise<{ [ index: string ]: string | undefined }>
+     */
+    getPeers(
+    /**
+     * 웹소켓
+     */
+    websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {

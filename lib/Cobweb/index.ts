@@ -1,30 +1,34 @@
 import { Spider, Transaction, isSpiderTypeValid, anyToSpider } from './Spider'
 
-function stringify(data: any): string
-{
-    return JSON.stringify(data, (key: string, value: any) => typeof value === 'bigint' ? `${value.toString()}n` : value)
-}
-
-function parse(data: any): any
-{
-    return JSON.parse(data, (key: string, value: any) =>
-    {
-        if (typeof value === 'string' && /^\d+n$/.test(value)) 
-            return BigInt(value.slice(0, value.length - 1))
-
-        return value
-    })
-}
-
+/**
+ * 코브웹
+ * 
+ * @since v1.0.0-alpha
+ * @param spiders 스파이더
+ */
 export class Cobweb
 {
+    /**
+     * 스파이더
+     */
     public spiders: { [ index: string ]: Spider }
 
-    constructor(spiders?: { [ index: string ]: Spider })
+    constructor(
+        /**
+         * 스파이더
+         */
+        spiders?: { [ index: string ]: Spider })
     {
         this.spiders = (spiders || {})
     }
 
+    /**
+     * 새로운 거래를 추가합니다
+     * 
+     * @since v1.0.0-alpha
+     * @param transaction 거래
+     * @returns boolean
+     */
     public add(transaction: Transaction): boolean
     {
         for (let i: number = 0; i < transaction.targets.length; i ++)
@@ -43,6 +47,14 @@ export class Cobweb
     }
 }
 
+
+/**
+ * 데이터가 스파이더인지 검증합니다
+ * 
+ * @since v1.0.0-alpha
+ * @param data 
+ * @returns boolean
+ */
 export function isSpidersTypeValid(data: any): boolean
 {
     if (data instanceof Object)
@@ -57,6 +69,13 @@ export function isSpidersTypeValid(data: any): boolean
     return false
 }
 
+/**
+ * 데이터를 스파이더로 변환합니다
+ * 
+ * @since v1.0.0-alpha
+ * @param data 
+ * @returns { [ index: string ]: Spider } | undefined
+ */
 export function anyToSpiders(data: any): { [ index: string ]: Spider } | undefined
 {
     if (isSpidersTypeValid(data))
@@ -69,4 +88,4 @@ export function anyToSpiders(data: any): { [ index: string ]: Spider } | undefin
     }
 }
 
-export { isTransactionHashValid, isTransactionNonceValid, isSpiderTypeValid, isTransactionTransfersValid, isTransactionTypeValid, isTransactionValid, isTransferSignatureValid, isTransferTypeValid, isTransferValid, anyToTransaction, anyToSpider, anyToTransfer, Transaction, Spider, Transfer, calculateTransactionHash, calculateTransactionNonce } from './Spider'
+export * from './Spider'
