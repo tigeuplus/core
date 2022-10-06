@@ -58,14 +58,8 @@ export class Wallet
      * 피어
      */
     public peers: { [ index: string ]: { websocket: WebSocket, address: string } }
-    /**
-     * 저장 경로
-     */
-    public storage: string
-    /**
-     * 타임아웃
-     */
-    public timeout: number
+    private storage: string
+    private timeout: number
 
     constructor(
         /**
@@ -156,17 +150,7 @@ export class Wallet
         })
     }
 
-    /**
-     * 잔액을 삭제합니다
-     * 
-     * @since v1.0.0-alpha
-     * @param address 주소
-     */
-    public deleteBalance(
-        /**
-         * 주소
-         */
-        address: string): void
+    private deleteBalance(address: string): void
     {
         try
         {
@@ -176,22 +160,7 @@ export class Wallet
         {}
     }
 
-    /**
-     * 잔액을 저장합니다
-     * 
-     * @since v1.0.0-alpha
-     * @param address 주소
-     * @param balance 잔액
-     */
-    public saveBalance(
-        /**
-         * 주소
-         */
-        address: string, 
-        /**
-         * 잔액
-         */
-        balance: bigint): void
+    private saveBalance(address: string, balance: bigint): void
     {
         writeFileSync(path.join(this.storage, 'snapshots', `${address}.json`), stringify(balance), { encoding: 'utf8' })
     }
@@ -327,6 +296,13 @@ export class Wallet
             }
     }
 
+    /**
+     * 거래의 기본 네트워크 요청 조건을 검증합니다
+     * 
+     * @since v1.0.0-alpha
+     * @param transaction 거래
+     * @returns boolean
+     */
     public isTransactionTypeValid(transaction: Transaction): boolean
     {
         for (let i: number = 0; i < transaction.targets.length; i ++)
@@ -336,6 +312,14 @@ export class Wallet
         return isTransactionValid(transaction)
     }
 
+    /**
+     * 거래를 검증합니다
+     * 
+     * @since v1.0.0-alpha.2
+     * @param transaction 거래
+     * @param spider 기존 스파이더 여부
+     * @returns boolean
+     */
     public isTransactionValid(transaction: Transaction, spider: boolean = false): boolean
     {
         if (spider)
@@ -391,18 +375,7 @@ export class Wallet
         }
     }
 
-    /**
-     * 모든 잔액을 가져옵니다
-     * 
-     * @since v1.0.0-alpha
-     * @param websocket 
-     * @returns Promise<{ [ index: string ]: bigint } | undefined>
-     */
-    public getBalances(
-        /**
-         * 웹소켓
-         */
-        websocket: WebSocket): Promise<{ [ index: string ]: bigint } | undefined>
+    private getBalances(websocket: WebSocket): Promise<{ [ index: string ]: bigint } | undefined>
     {
         return new Promise((resolve: any, reject: any): void =>
         {
@@ -452,18 +425,7 @@ export class Wallet
         })
     }
 
-    /**
-     * 모든 스파이더를 가져옵니댜
-     * 
-     * @since v1.0.0-alpha
-     * @param websocket 
-     * @returns Promise<{ [ index: string ]: Spider} | undefined>
-     */
-    public getSpiders(
-        /**
-         * 웹소켓
-         */
-        websocket: WebSocket): Promise<{ [ index: string ]: Spider } | undefined>
+    private getSpiders(websocket: WebSocket): Promise<{ [ index: string ]: Spider } | undefined>
     {
         return new Promise((resolve: any, reject: any): void =>
         {
@@ -512,27 +474,7 @@ export class Wallet
         })
     }
 
-    /**
-     * 피어를 추가합니다
-     * 
-     * @since v1.0.0-alpha
-     * @param websocket 웹소켓
-     * @param url 주소
-     * @param peers 피어 리스트
-     */
-    public addPeer(
-        /**
-         * 웹소켓
-         */
-        websocket: WebSocket, 
-        /**
-         * 주소
-         */
-        url: string, 
-        /**
-         * 피어 리스트
-         */
-        peers: { [ index: string ]: string }): Promise<void>
+    private addPeer(websocket: WebSocket, url: string, peers: { [ index: string ]: string }): Promise<void>
     {
         return new Promise((resolve: any, reject: any): void =>
         {
@@ -549,18 +491,7 @@ export class Wallet
         })
     }
 
-    /**
-     * 모든 피어를 가져갑니다
-     * 
-     * @since v1.0.0-alpha
-     * @param websocket 웹소켓
-     * @returns Promise<{ [ index: string ]: string | undefined }>
-     */
-    public getPeers(
-        /**
-         * 웹소켓
-         */
-        websocket: WebSocket): Promise<{ [ index: string ]: string } | undefined>
+    private getPeers(websocket: WebSocket): Promise<{ [ index: string ]: string } | undefined>
     {
         return new Promise((resolve: any, reject: any): void =>
         {

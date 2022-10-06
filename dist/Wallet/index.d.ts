@@ -1,4 +1,4 @@
-import { Cobweb, Transaction, Spider, Transfer } from '../Cobweb';
+import { Cobweb, Transaction, Transfer } from '../Cobweb';
 import { WebSocketServer, WebSocket } from 'ws';
 /**
  * 지갑
@@ -39,14 +39,8 @@ export declare class Wallet {
             address: string;
         };
     };
-    /**
-     * 저장 경로
-     */
-    storage: string;
-    /**
-     * 타임아웃
-     */
-    timeout: number;
+    private storage;
+    private timeout;
     constructor(
     /**
      * 저장 경로
@@ -64,33 +58,8 @@ export declare class Wallet {
      * 주소
      */
     url?: string);
-    /**
-     * 잔액을 삭제합니다
-     *
-     * @since v1.0.0-alpha
-     * @param address 주소
-     */
-    deleteBalance(
-    /**
-     * 주소
-     */
-    address: string): void;
-    /**
-     * 잔액을 저장합니다
-     *
-     * @since v1.0.0-alpha
-     * @param address 주소
-     * @param balance 잔액
-     */
-    saveBalance(
-    /**
-     * 주소
-     */
-    address: string, 
-    /**
-     * 잔액
-     */
-    balance: bigint): void;
+    private deleteBalance;
+    private saveBalance;
     /**
      * 잔액을 가져옵니다
      *
@@ -130,73 +99,27 @@ export declare class Wallet {
     calculateTargetTransaction(): [string, string];
     private onConnection;
     private onMessage;
+    /**
+     * 거래의 기본 네트워크 요청 조건을 검증합니다
+     *
+     * @since v1.0.0-alpha
+     * @param transaction 거래
+     * @returns boolean
+     */
     isTransactionTypeValid(transaction: Transaction): boolean;
+    /**
+     * 거래를 검증합니다
+     *
+     * @since v1.0.0-alpha.2
+     * @param transaction 거래
+     * @param spider 기존 스파이더 여부
+     * @returns boolean
+     */
     isTransactionValid(transaction: Transaction, spider?: boolean): boolean;
     private onClose;
     private init;
-    /**
-     * 모든 잔액을 가져옵니다
-     *
-     * @since v1.0.0-alpha
-     * @param websocket
-     * @returns Promise<{ [ index: string ]: bigint } | undefined>
-     */
-    getBalances(
-    /**
-     * 웹소켓
-     */
-    websocket: WebSocket): Promise<{
-        [index: string]: bigint;
-    } | undefined>;
-    /**
-     * 모든 스파이더를 가져옵니댜
-     *
-     * @since v1.0.0-alpha
-     * @param websocket
-     * @returns Promise<{ [ index: string ]: Spider} | undefined>
-     */
-    getSpiders(
-    /**
-     * 웹소켓
-     */
-    websocket: WebSocket): Promise<{
-        [index: string]: Spider;
-    } | undefined>;
-    /**
-     * 피어를 추가합니다
-     *
-     * @since v1.0.0-alpha
-     * @param websocket 웹소켓
-     * @param url 주소
-     * @param peers 피어 리스트
-     */
-    addPeer(
-    /**
-     * 웹소켓
-     */
-    websocket: WebSocket, 
-    /**
-     * 주소
-     */
-    url: string, 
-    /**
-     * 피어 리스트
-     */
-    peers: {
-        [index: string]: string;
-    }): Promise<void>;
-    /**
-     * 모든 피어를 가져갑니다
-     *
-     * @since v1.0.0-alpha
-     * @param websocket 웹소켓
-     * @returns Promise<{ [ index: string ]: string | undefined }>
-     */
-    getPeers(
-    /**
-     * 웹소켓
-     */
-    websocket: WebSocket): Promise<{
-        [index: string]: string;
-    } | undefined>;
+    private getBalances;
+    private getSpiders;
+    private addPeer;
+    private getPeers;
 }

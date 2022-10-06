@@ -75,13 +75,7 @@ class Wallet {
      * 피어
      */
     peers;
-    /**
-     * 저장 경로
-     */
     storage;
-    /**
-     * 타임아웃
-     */
     timeout;
     constructor(
     /**
@@ -153,38 +147,13 @@ class Wallet {
                 }
         });
     }
-    /**
-     * 잔액을 삭제합니다
-     *
-     * @since v1.0.0-alpha
-     * @param address 주소
-     */
-    deleteBalance(
-    /**
-     * 주소
-     */
-    address) {
+    deleteBalance(address) {
         try {
             (0, fs_1.unlinkSync)(path.join(this.storage, 'snapshots', `${address}.json`));
         }
         catch (error) { }
     }
-    /**
-     * 잔액을 저장합니다
-     *
-     * @since v1.0.0-alpha
-     * @param address 주소
-     * @param balance 잔액
-     */
-    saveBalance(
-    /**
-     * 주소
-     */
-    address, 
-    /**
-     * 잔액
-     */
-    balance) {
+    saveBalance(address, balance) {
         (0, fs_1.writeFileSync)(path.join(this.storage, 'snapshots', `${address}.json`), stringify(balance), { encoding: 'utf8' });
     }
     /**
@@ -289,12 +258,27 @@ class Wallet {
                     break;
             }
     }
+    /**
+     * 거래의 기본 네트워크 요청 조건을 검증합니다
+     *
+     * @since v1.0.0-alpha
+     * @param transaction 거래
+     * @returns boolean
+     */
     isTransactionTypeValid(transaction) {
         for (let i = 0; i < transaction.targets.length; i++)
             if (!this.cobweb.spiders[transaction.targets[i]])
                 return false;
         return (0, Cobweb_1.isTransactionValid)(transaction);
     }
+    /**
+     * 거래를 검증합니다
+     *
+     * @since v1.0.0-alpha.2
+     * @param transaction 거래
+     * @param spider 기존 스파이더 여부
+     * @returns boolean
+     */
     isTransactionValid(transaction, spider = false) {
         if (spider)
             for (let i = 0; i < transaction.targets.length; i++) {
@@ -335,18 +319,7 @@ class Wallet {
             (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
         }
     }
-    /**
-     * 모든 잔액을 가져옵니다
-     *
-     * @since v1.0.0-alpha
-     * @param websocket
-     * @returns Promise<{ [ index: string ]: bigint } | undefined>
-     */
-    getBalances(
-    /**
-     * 웹소켓
-     */
-    websocket) {
+    getBalances(websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
@@ -380,18 +353,7 @@ class Wallet {
             websocket.send(stringify(new Command_1.Command('Get_Balances')));
         });
     }
-    /**
-     * 모든 스파이더를 가져옵니댜
-     *
-     * @since v1.0.0-alpha
-     * @param websocket
-     * @returns Promise<{ [ index: string ]: Spider} | undefined>
-     */
-    getSpiders(
-    /**
-     * 웹소켓
-     */
-    websocket) {
+    getSpiders(websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
@@ -425,27 +387,7 @@ class Wallet {
             websocket.send(stringify(new Command_1.Command('Get_Spiders', this.address)));
         });
     }
-    /**
-     * 피어를 추가합니다
-     *
-     * @since v1.0.0-alpha
-     * @param websocket 웹소켓
-     * @param url 주소
-     * @param peers 피어 리스트
-     */
-    addPeer(
-    /**
-     * 웹소켓
-     */
-    websocket, 
-    /**
-     * 주소
-     */
-    url, 
-    /**
-     * 피어 리스트
-     */
-    peers) {
+    addPeer(websocket, url, peers) {
         return new Promise((resolve, reject) => {
             for (let i = 0; i < Object.keys(peers).length; i++)
                 if (Object.keys(peers)[i] === url)
@@ -457,18 +399,7 @@ class Wallet {
                 }
         });
     }
-    /**
-     * 모든 피어를 가져갑니다
-     *
-     * @since v1.0.0-alpha
-     * @param websocket 웹소켓
-     * @returns Promise<{ [ index: string ]: string | undefined }>
-     */
-    getPeers(
-    /**
-     * 웹소켓
-     */
-    websocket) {
+    getPeers(websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
