@@ -43,11 +43,11 @@ class Transfer {
     signature;
     constructor(
     /**
-     * 수신자
+     * 전송자
      */
     from, 
     /**
-     * 전송자
+     * 수신자
      */
     to, 
     /**
@@ -57,7 +57,7 @@ class Transfer {
     /**
      * 메모
      * */
-    memo, 
+    memo = '', 
     /**
      * 생성된 시간
      */

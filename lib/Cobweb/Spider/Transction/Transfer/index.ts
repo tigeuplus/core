@@ -45,11 +45,11 @@ export class Transfer
 
     constructor(
         /**
-         * 수신자
+         * 전송자
          */
         from: string, 
         /**
-         * 전송자
+         * 수신자
          */
         to: string, 
         /**
@@ -59,7 +59,7 @@ export class Transfer
         /**
          * 메모 
          * */ 
-        memo: string,
+        memo: string = '',
         /**
          * 생성된 시간
          */

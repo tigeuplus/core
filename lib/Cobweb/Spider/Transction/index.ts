@@ -65,18 +65,18 @@ export class Transaction
         /**
          * 문제 답
          */ 
-        nonce?: number, 
+        nonce: number = 0, 
         /**
          * 해시
          */
-        hash?: string)
+        hash: string = '')
     {
         this.author = author
         this.transfers = transfers
         this.timestamp = timestamp
         this.targets = targets
-        this.nonce = (nonce || calculateTransactionNonce(this))
-        this.hash = (hash || calculateTransactionHash(this))
+        this.nonce = nonce
+        this.hash = hash
     }
 }
 

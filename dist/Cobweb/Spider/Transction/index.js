@@ -77,17 +77,17 @@ class Transaction {
     /**
      * 문제 답
      */
-    nonce, 
+    nonce = 0, 
     /**
      * 해시
      */
-    hash) {
+    hash = '') {
         this.author = author;
         this.transfers = transfers;
         this.timestamp = timestamp;
         this.targets = targets;
-        this.nonce = (nonce || calculateTransactionNonce(this));
-        this.hash = (hash || calculateTransactionHash(this));
+        this.nonce = nonce;
+        this.hash = hash;
     }
 }
 exports.Transaction = Transaction;

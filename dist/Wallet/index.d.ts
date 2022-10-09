@@ -39,8 +39,18 @@ export declare class Wallet {
             address: string;
         };
     };
-    private storage;
-    private timeout;
+    /**
+     * 마지막으로 검증된 거래
+     */
+    omega: [string, string];
+    /**
+     * 저장 경로
+     */
+    storage: string;
+    /**
+     * 타임아웃
+     */
+    timeout: number;
     constructor(
     /**
      * 저장 경로
@@ -49,7 +59,7 @@ export declare class Wallet {
     /**
      * 타임아웃
      */
-    timeout: number, 
+    timeout?: number, 
     /**
      * 포트
      */
@@ -118,8 +128,10 @@ export declare class Wallet {
     isTransactionValid(transaction: Transaction, spider?: boolean): boolean;
     private onClose;
     private init;
+    private getOmega;
     private getBalances;
     private getSpiders;
     private addPeer;
     private getPeers;
 }
+export * from './Command';

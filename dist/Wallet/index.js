@@ -22,6 +22,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Wallet = void 0;
 const Cobweb_1 = require("../Cobweb");
@@ -75,7 +78,17 @@ class Wallet {
      * 피어
      */
     peers;
+    /**
+     * 마지막으로 검증된 거래
+     */
+    omega;
+    /**
+     * 저장 경로
+     */
     storage;
+    /**
+     * 타임아웃
+     */
     timeout;
     constructor(
     /**
@@ -85,21 +98,22 @@ class Wallet {
     /**
      * 타임아웃
      */
-    timeout, 
+    timeout = 1000, 
     /**
      * 포트
      */
-    port, 
+    port = 6000, 
     /**
      * 주소
      */
     url) {
         this.storage = storage;
         this.timeout = timeout;
-        this.server = new ws_1.Server({ port: (port || 6001) });
+        this.server = new ws_1.Server({ port: port });
         this.peers = {};
         this.balance = 0n;
         this.cobweb = new Cobweb_1.Cobweb();
+        this.omega = ['', ''];
         try {
             this.privatekey = (0, fs_1.readFileSync)(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' });
             this.address = new elliptic_1.ec('secp256k1').keyFromPrivate(this.privatekey, 'hex').getPublic('hex');
@@ -114,6 +128,12 @@ class Wallet {
         if (url) {
             let websocket = new ws_1.WebSocket(url);
             websocket.on('open', async () => this.init(websocket, url));
+        }
+        else {
+            let transfer = new Cobweb_1.Transfer('', this.address, 1000000000000n);
+            let transaction = new Cobweb_1.Transaction('', [transfer], ['', '']);
+            this.cobweb.add(transaction);
+            this.omega = [transaction.hash, transaction.hash];
         }
         (0, node_schedule_1.scheduleJob)('3 * * * * *', async () => {
             let spiders = (0, Cobweb_1.anyToSpiders)(parse(stringify(this.cobweb.spiders)));
@@ -185,7 +205,9 @@ class Wallet {
      * 전송 데이터
      */
     transfers) {
-        this.broadcast(stringify(new Command_1.Command('Add_Transaction', new Cobweb_1.Transaction(this.address, transfers, this.calculateTargetTransaction()))));
+        let transaction = new Cobweb_1.Transaction(transfers[0].from, transfers, this.calculateTargetTransaction());
+        transaction = new Cobweb_1.Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash);
+        this.broadcast(stringify(new Command_1.Command('Add_Transaction', transaction)));
     }
     /**
      * 모든 피어에게 데이터를 전송합니다
@@ -204,27 +226,31 @@ class Wallet {
      * @returns [ string, string ]
      */
     calculateTargetTransaction() {
-        let spiders = {};
-        for (let i = 0; i < 100; i++) {
-            let hash = Object.keys(this.cobweb.spiders).sort((a, b) => this.cobweb.spiders[b].targets.length - this.cobweb.spiders[a].targets.length);
-            let candidates = [[], []];
-            candidates[1] = hash;
-            for (let j = 0; j < (Math.floor(hash.length / 9) + 1); j++)
-                candidates[0][j] = hash[j];
-            let transactions = [];
-            for (; transactions.length === 1;) {
-                let j = Math.floor(Math.random() * candidates[Math.min(transactions.length, 1)].length);
-                if ((0, Cobweb_1.isTransactionValid)(this.cobweb.spiders[candidates[Math.min(transactions.length, 1)][j]].transaction))
-                    transactions.push(candidates[Math.min(transactions.length, 1)][i]);
-            }
-            for (let j = 0; j < transactions.length; j++)
-                if (spiders[transactions[j]])
-                    spiders[transactions[j]] += 1;
-                else
-                    spiders[transactions[j]] = 1;
+        let spiders = [{}, {}];
+        for (let i = 0; i < 2; i++) {
+            let spider = this.cobweb.spiders[this.omega[i]];
+            if (spider)
+                for (let j = 0; j < 100; j++) {
+                    for (;;) {
+                        let k = Math.floor(Math.random() * spider.transaction.targets.length);
+                        if (this.cobweb.spiders[spider.targets[k]])
+                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction)) {
+                                spiders[0][spider.targets[k]] = (spiders[0][spider.targets[k]] || 0) + 1;
+                                break;
+                            }
+                    }
+                    for (;;) {
+                        let k = Math.floor(Math.random() * spider.targets.length);
+                        if (this.cobweb.spiders[spider.targets[k]])
+                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction)) {
+                                spiders[1][spider.targets[k]] = (spiders[1][spider.targets[k]] || 0) + 1;
+                                break;
+                            }
+                    }
+                }
         }
-        let ascending = Object.keys(spiders).sort((a, b) => spiders[b] - spiders[a]);
-        return [ascending[0], ascending[1]];
+        let ascending = [Object.keys(spiders[0]).sort((a, b) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a, b) => spiders[1][b] - spiders[1][a])];
+        return [ascending[0][0], ascending[1][0]];
     }
     async onConnection(websocket, request) {
         websocket.on('close', () => this.onClose(request.headers.host));
@@ -256,6 +282,8 @@ class Wallet {
                         if (this.isTransactionTypeValid(transaction))
                             this.cobweb.add(transaction);
                     break;
+                case 'Get_Omega':
+                    return websocket.send(stringify(new Command_1.Command('Get_Omega_Result', this.omega)));
             }
     }
     /**
@@ -319,6 +347,40 @@ class Wallet {
             (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
         }
     }
+    getOmega(websocket) {
+        return new Promise((resolve, reject) => {
+            let stop = false;
+            let timeout = setTimeout(() => {
+                stop = true;
+            }, this.timeout);
+            let onMessage = ((message) => {
+                let omega;
+                let command = (0, Command_1.anyToCommand)(message);
+                if (command)
+                    switch (command.name) {
+                        case 'Get_Omega_Result':
+                            if (command.data instanceof Array)
+                                if (command.data.length === 2) {
+                                    let succes = true;
+                                    for (let i = 0; i < command.data.length; i++)
+                                        if (typeof command.data[i] !== 'string') {
+                                            succes = false;
+                                            break;
+                                        }
+                                    if (succes)
+                                        omega = [command.data[0], command.data[1]];
+                                }
+                    }
+                if (stop)
+                    return resolve();
+                if (omega)
+                    return resolve(omega);
+                websocket.once('message', onMessage);
+            });
+            websocket.once('message', onMessage);
+            websocket.send(stringify(new Command_1.Command('Get_Omega')));
+        });
+    }
     getBalances(websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
@@ -326,8 +388,6 @@ class Wallet {
                 stop = true;
             }, this.timeout);
             let onMessage = ((message) => {
-                if (stop)
-                    return resolve();
                 let balances;
                 let command = (0, Command_1.anyToCommand)(message);
                 if (command)
@@ -347,6 +407,8 @@ class Wallet {
                     }
                 if (balances)
                     return resolve(balances);
+                if (stop)
+                    return resolve();
                 websocket.once('message', onMessage);
             });
             websocket.once('message', onMessage);
@@ -360,8 +422,6 @@ class Wallet {
                 stop = true;
             }, this.timeout);
             let onMessage = ((message) => {
-                if (stop)
-                    return resolve();
                 let spiders;
                 let command = (0, Command_1.anyToCommand)(message);
                 if (command)
@@ -381,6 +441,8 @@ class Wallet {
                     }
                 if (spiders)
                     return resolve(spiders);
+                if (stop)
+                    return resolve();
                 websocket.once('message', onMessage);
             });
             websocket.once('message', onMessage);
@@ -406,8 +468,6 @@ class Wallet {
                 stop = true;
             }, this.timeout);
             let onMessage = ((message) => {
-                if (stop)
-                    return resolve();
                 let peers;
                 let command = (0, Command_1.anyToCommand)(message);
                 if (command)
@@ -427,6 +487,8 @@ class Wallet {
                     }
                 if (peers)
                     return resolve(peers);
+                if (stop)
+                    return resolve();
                 websocket.once('message', onMessage);
             });
             websocket.once('message', onMessage);
@@ -435,4 +497,5 @@ class Wallet {
     }
 }
 exports.Wallet = Wallet;
+__exportStar(require("./Command"), exports);
 //# sourceMappingURL=index.js.map

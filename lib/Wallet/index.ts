@@ -58,8 +58,18 @@ export class Wallet
      * 피어
      */
     public peers: { [ index: string ]: { websocket: WebSocket, address: string } }
-    private storage: string
-    private timeout: number
+    /**
+     * 마지막으로 검증된 거래
+     */
+    public omega: [ string, string ]
+    /**
+     * 저장 경로
+     */
+    public storage: string
+    /**
+     * 타임아웃
+     */
+    public timeout: number
 
     constructor(
         /**
@@ -69,11 +79,11 @@ export class Wallet
         /**
          * 타임아웃
          */
-        timeout: number, 
+        timeout: number = 1000, 
         /**
          * 포트
          */
-        port?: number, 
+        port: number = 6000, 
         /**
          * 주소
          */
@@ -81,10 +91,11 @@ export class Wallet
     {
         this.storage = storage
         this.timeout = timeout
-        this.server = new Server({ port: (port || 6001) })
+        this.server = new Server({ port: port })
         this.peers = {}
         this.balance = 0n
         this.cobweb = new Cobweb()
+        this.omega = [ '', '' ]
 
         try
         {
@@ -105,6 +116,14 @@ export class Wallet
         {
             let websocket: WebSocket = new WebSocket(url)
             websocket.on('open', async (): Promise<void> => this.init(websocket, url))
+        }
+        else
+        {
+            let transfer: Transfer = new Transfer('', this.address, 1000000000000n)
+            let transaction: Transaction = new Transaction('', [ transfer ], [ '', '' ])
+
+            this.cobweb.add(transaction)
+            this.omega = [ transaction.hash, transaction.hash ]
         }
 
         scheduleJob('3 * * * * *', async(): Promise<void> =>
@@ -200,7 +219,10 @@ export class Wallet
          */
         transfers: Transfer[]): void
     {
-        this.broadcast(stringify(new Command('Add_Transaction', new Transaction(this.address, transfers, this.calculateTargetTransaction()))))
+        let transaction: Transaction = new Transaction(transfers[0].from, transfers, this.calculateTargetTransaction())
+        transaction = new Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash)
+
+        this.broadcast(stringify(new Command('Add_Transaction', transaction)))
     }
 
     /**
@@ -223,33 +245,39 @@ export class Wallet
      */
     public calculateTargetTransaction(): [ string, string ]
     {
-        let spiders: { [ index: string ]: number } = {}
-        for (let i: number = 0; i < 100; i ++)
+        let spiders: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
+        for (let i: number = 0; i < 2; i ++)
         {
-            let hash: string[] =  Object.keys(this.cobweb.spiders).sort((a: string, b: string) => this.cobweb.spiders[b].targets.length - this.cobweb.spiders[a].targets.length)
+            let spider: Spider | undefined = this.cobweb.spiders[this.omega[i]]
+            if (spider)
+                for (let j: number = 0; j < 100; j ++)
+                {
+                    for (;;)
+                    {
+                        let k: number = Math.floor(Math.random() * spider.transaction.targets.length)
+                        if (this.cobweb.spiders[spider.targets[k]])
+                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction))
+                            {
+                                spiders[0][spider.targets[k]] = (spiders[0][spider.targets[k]] || 0) + 1
+                                break
+                            }
+                    }
 
-            let candidates: [ string[], string[] ] = [ [], [] ]
-            candidates[1] = hash
-            for (let j: number = 0; j < (Math.floor(hash.length / 9) + 1); j ++)
-                candidates[0][j] = hash[j]
-    
-            let transactions: string[] = []
-            for (; transactions.length === 1;)
-            {
-                let j: number = Math.floor(Math.random() * candidates[Math.min(transactions.length, 1)].length)
-                if (isTransactionValid(this.cobweb.spiders[candidates[Math.min(transactions.length, 1)][j]].transaction))
-                    transactions.push(candidates[Math.min(transactions.length, 1)][i])
-            }
-
-            for (let j: number = 0; j < transactions.length; j ++)
-                if (spiders[transactions[j]])
-                    spiders[transactions[j]] += 1
-                else
-                    spiders[transactions[j]] = 1
+                    for (;;)
+                    {
+                        let k: number = Math.floor(Math.random() * spider.targets.length)
+                        if (this.cobweb.spiders[spider.targets[k]])
+                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction))
+                            {
+                                spiders[1][spider.targets[k]] = (spiders[1][spider.targets[k]] || 0) + 1
+                                break
+                            }
+                    }
+                }
         }
 
-        let ascending: string[] = Object.keys(spiders).sort((a: string, b: string) => spiders[b] - spiders[a])
-        return [ ascending[0], ascending[1] ]
+        let ascending: [ string[], string[] ] = [ Object.keys(spiders[0]).sort((a: string, b: string) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a: string, b: string) => spiders[1][b] - spiders[1][a])]
+        return [ ascending[0][0], ascending[1][0] ]
     }
 
     private async onConnection(websocket: WebSocket, request: IncomingMessage): Promise<void>
@@ -293,6 +321,9 @@ export class Wallet
                             this.cobweb.add(transaction)
 
                     break
+
+                case 'Get_Omega':
+                    return websocket.send(stringify(new Command('Get_Omega_Result', this.omega)))
             }
     }
 
@@ -374,6 +405,54 @@ export class Wallet
             writeFileSync(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' })
         }
     }
+    
+    private getOmega(websocket: WebSocket): Promise<[ string, string ] | undefined>
+    {
+        return new Promise((resolve: any, reject: any): void =>
+        {
+            let stop: boolean = false
+            let timeout: NodeJS.Timeout = setTimeout((): void =>
+            {
+                stop = true
+            }, this.timeout)
+
+            let onMessage: ((message: any) => void) = ((message: any): void =>
+            {
+                let omega: [ string, string ] | undefined
+                let command: Command | undefined = anyToCommand(message)
+                if (command)
+                    switch (command.name)
+                    {
+                        case 'Get_Omega_Result':
+                            if (command.data instanceof Array)
+                                if (command.data.length === 2)
+                                {
+                                    let succes: boolean = true
+                                    for (let i: number = 0; i < command.data.length; i ++)
+                                        if (typeof command.data[i] !== 'string')
+                                        {
+                                            succes = false
+                                            break
+                                        }
+    
+                                    if (succes)
+                                        omega = [ command.data[0], command.data[1] ]
+                                }
+                    }
+
+                if (stop)
+                    return resolve()
+
+                if (omega)
+                    return resolve(omega)
+
+                websocket.once('message', onMessage)
+            })
+
+            websocket.once('message', onMessage)
+            websocket.send(stringify(new Command('Get_Omega')))
+        })
+    }
 
     private getBalances(websocket: WebSocket): Promise<{ [ index: string ]: bigint } | undefined>
     {
@@ -387,9 +466,6 @@ export class Wallet
 
             let onMessage: ((message: any) => void) = ((message: any): void =>
             {
-                if (stop)
-                    return resolve()
-
                 let balances: { [ index: string ]: bigint } | undefined
                 let command: Command | undefined = anyToCommand(message)
                 if (command)
@@ -417,6 +493,10 @@ export class Wallet
                 if (balances)
                     return resolve(balances)
 
+                
+                if (stop)
+                    return resolve()
+
                 websocket.once('message', onMessage)
             })
 
@@ -437,9 +517,6 @@ export class Wallet
 
             let onMessage: ((message: any) => void) = ((message: any): void =>
             {
-                if (stop)
-                    return resolve()
-
                 let spiders: { [ index: string ]: string } | undefined
                 let command: Command | undefined = anyToCommand(message)
                 if (command)
@@ -465,6 +542,10 @@ export class Wallet
 
                 if (spiders)
                     return resolve(spiders)
+
+                
+                if (stop)
+                    return resolve()
 
                 websocket.once('message', onMessage)
             })
@@ -503,9 +584,6 @@ export class Wallet
 
             let onMessage: ((message: any) => void) = ((message: any): void =>
             {
-                if (stop)
-                    return resolve()
-
                 let peers: { [ index: string ]: string } | undefined
                 let command: Command | undefined = anyToCommand(message)
                 if (command)
@@ -532,6 +610,10 @@ export class Wallet
                 if (peers)
                     return resolve(peers)
 
+                
+                if (stop)
+                    return resolve()
+
                 websocket.once('message', onMessage)
             })
 
@@ -540,3 +622,5 @@ export class Wallet
         })
     }
 }
+
+export * from './Command'
