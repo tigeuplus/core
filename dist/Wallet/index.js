@@ -114,11 +114,11 @@ class Wallet {
         this.balance = 0n;
         this.cobweb = new Cobweb_1.Cobweb();
         this.omega = ['', ''];
-        try {
+        if ((0, fs_1.existsSync)(path.join(this.storage, 'wallet', '.key'))) {
             this.privatekey = (0, fs_1.readFileSync)(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' });
             this.address = new elliptic_1.ec('secp256k1').keyFromPrivate(this.privatekey, 'hex').getPublic('hex');
         }
-        catch (error) {
+        else {
             let EC = new elliptic_1.ec('secp256k1').genKeyPair();
             this.privatekey = EC.getPrivate('hex');
             this.address = EC.getPublic('hex');

@@ -1,7 +1,7 @@
 import { anyToTransaction, isSpiderTypeValid, isTransactionValid, Cobweb, Transaction, Spider, anyToSpiders, Transfer } from '../Cobweb'
 import { WebSocketServer, WebSocket, Server, RawData } from 'ws'
 import * as path from 'path'
-import { readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
+import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
 import { ec } from 'elliptic'
 import { anyToCommand, Command } from './Command'
 import { IncomingMessage } from 'http'
@@ -97,12 +97,12 @@ export class Wallet
         this.cobweb = new Cobweb()
         this.omega = [ '', '' ]
 
-        try
+        if (existsSync(path.join(this.storage, 'wallet', '.key')))
         {
             this.privatekey = readFileSync(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' })
             this.address = new ec('secp256k1').keyFromPrivate(this.privatekey, 'hex').getPublic('hex')
         }
-        catch (error: any)
+        else
         {
             let EC: ec.KeyPair = new ec('secp256k1').genKeyPair()
             this.privatekey = EC.getPrivate('hex')
