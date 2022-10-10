@@ -1,7 +1,7 @@
 import { anyToTransaction, isSpiderTypeValid, isTransactionValid, Cobweb, Transaction, Spider, anyToSpiders, Transfer } from '../Cobweb'
 import { WebSocketServer, WebSocket, Server, RawData } from 'ws'
 import * as path from 'path'
-import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs'
 import { ec } from 'elliptic'
 import { anyToCommand, Command } from './Command'
 import { IncomingMessage } from 'http'
@@ -97,6 +97,9 @@ export class Wallet
         this.cobweb = new Cobweb()
         this.omega = [ '', '' ]
 
+        mkdirSync(path.join(this.storage, 'wallet'))
+        mkdirSync(path.join(this.storage, 'transactions'))
+        mkdirSync(path.join(this.storage, 'snapshots'))
         if (existsSync(path.join(this.storage, 'wallet', '.key')))
         {
             this.privatekey = readFileSync(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' })
@@ -147,7 +150,7 @@ export class Wallet
                                     }
                     }
 
-                    delete this.cobweb.spiders[Object.keys(spiders)[i]]
+                    let save: boolean = false
                     for (let j: number = 0; j < spiders[Object.keys(spiders)[i]].transaction.transfers.length; j ++)
                     {
                         let from: string = spiders[Object.keys(spiders)[i]].transaction.transfers[j].from
@@ -163,7 +166,16 @@ export class Wallet
                             this.saveBalance(from, (balanceOfFrom - value))
 
                         this.saveBalance(to, (balanceOfTo + value))
+
+                        if (from === this.address || to === this.address)
+                            save = true
                     }
+
+                    if (save)
+                        writeFileSync(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' } )
+
+                    
+                    delete this.cobweb.spiders[Object.keys(spiders)[i]]
                 }
                         
         })

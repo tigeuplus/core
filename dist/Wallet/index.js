@@ -114,6 +114,9 @@ class Wallet {
         this.balance = 0n;
         this.cobweb = new Cobweb_1.Cobweb();
         this.omega = ['', ''];
+        (0, fs_1.mkdirSync)(path.join(this.storage, 'wallet'));
+        (0, fs_1.mkdirSync)(path.join(this.storage, 'transactions'));
+        (0, fs_1.mkdirSync)(path.join(this.storage, 'snapshots'));
         if ((0, fs_1.existsSync)(path.join(this.storage, 'wallet', '.key'))) {
             this.privatekey = (0, fs_1.readFileSync)(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' });
             this.address = new elliptic_1.ec('secp256k1').keyFromPrivate(this.privatekey, 'hex').getPublic('hex');
@@ -151,7 +154,7 @@ class Wallet {
                                         break;
                                     }
                     }
-                    delete this.cobweb.spiders[Object.keys(spiders)[i]];
+                    let save = false;
                     for (let j = 0; j < spiders[Object.keys(spiders)[i]].transaction.transfers.length; j++) {
                         let from = spiders[Object.keys(spiders)[i]].transaction.transfers[j].from;
                         let to = spiders[Object.keys(spiders)[i]].transaction.transfers[j].to;
@@ -163,7 +166,12 @@ class Wallet {
                         else
                             this.saveBalance(from, (balanceOfFrom - value));
                         this.saveBalance(to, (balanceOfTo + value));
+                        if (from === this.address || to === this.address)
+                            save = true;
                     }
+                    if (save)
+                        (0, fs_1.writeFileSync)(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' });
+                    delete this.cobweb.spiders[Object.keys(spiders)[i]];
                 }
         });
     }
