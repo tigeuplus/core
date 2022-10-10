@@ -1,6 +1,6 @@
 {
     "name": "@tigeuplus/core",
-    "version": "v1.0.0-alpha.7",
+    "version": "v1.0.0-alpha.8",
     "description": "장소, 성능 상관없이",
     "main": "dist/index.js",
     "private": false,
@@ -16,6 +16,7 @@
     "license": "MIT",
     "dependencies": {
         "elliptic": "^6.5.4",
+        "hex-to-binary": "^1.0.1",
         "moment-timezone": "^0.5.37",
         "node-schedule": "^2.1.0",
         "ws": "^8.8.1"
