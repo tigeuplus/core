@@ -1,0 +1,20 @@
+{
+    "name": "site",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.ts",
+    "scripts": {
+        "start": "ts-node ./"
+    },
+    "keywords": [],
+    "author": "cobeol <cobeol0111@gmail.com>",
+    "license": "ISC",
+    "dependencies": {
+        "@tigeuplus/core": "^1.0.0-alpha.6",
+        "express": "^4.18.2"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.14",
+        "@types/node": "^18.8.3"
+    }
+}
