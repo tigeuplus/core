@@ -42,7 +42,7 @@ export declare class Wallet {
     /**
      * 마지막으로 검증된 거래
      */
-    omega: [string, string];
+    omegas: [string, string];
     /**
      * 저장 경로
      */
@@ -101,12 +101,12 @@ export declare class Wallet {
      */
     broadcast(message: string): void;
     /**
-     * 대상 거래를 계산합니다
+     * 대상 스파이더를 계산합니댜
      *
      * @since v1.0.0-alpha
      * @returns [ string, string ]
      */
-    calculateTargetTransaction(): [string, string];
+    calculateTargetSpider(): [string, string];
     private onConnection;
     private onMessage;
     /**
@@ -128,7 +128,7 @@ export declare class Wallet {
     isTransactionValid(transaction: Transaction, spider?: boolean): boolean;
     private onClose;
     private init;
-    private getOmega;
+    private getomegas;
     private getBalances;
     private getSpiders;
     private addPeer;

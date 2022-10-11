@@ -1,6 +1,6 @@
 {
     "name": "@tigeuplus/core",
-    "version": "v1.0.0-alpha.10",
+    "version": "v1.0.0-beta",
     "description": "장소, 성능 상관없이",
     "main": "dist/index.js",
     "private": false,

@@ -21,7 +21,7 @@ const Transction_1 = require("./Transction");
  *
  * @since v1.0.0-alpha
  * @param transaction 거래
- * @param targets 대상
+ * @param spiders 이 스피아더를 승인하는 스파이더
  */
 class Spider {
     /**
@@ -29,20 +29,20 @@ class Spider {
      */
     transaction;
     /**
-     * 대상
+     * 이 스피아더를 승인하는 스파이더
      */
-    targets;
+    spiders;
     constructor(
     /**
      * 거래
      */
     transaction, 
     /**
-     * 대상
+     * 이 스피아더를 승인하는 스파이더
      */
-    targets = []) {
+    spiders = []) {
         this.transaction = transaction;
-        this.targets = targets;
+        this.spiders = spiders;
     }
 }
 exports.Spider = Spider;
@@ -55,9 +55,9 @@ exports.Spider = Spider;
  */
 function isSpiderTypeValid(data) {
     if (data instanceof Object)
-        if (data.targets instanceof Array) {
-            for (let i = 0; i < data.targets.length; i++)
-                if (typeof data.targets[i] !== 'string')
+        if (data.spiders instanceof Array) {
+            for (let i = 0; i < data.spiders.length; i++)
+                if (typeof data.spiders[i] !== 'string')
                     return false;
             return (0, Transction_1.isTransactionTypeValid)(data.transaction);
         }
@@ -73,7 +73,7 @@ exports.isSpiderTypeValid = isSpiderTypeValid;
  */
 function anyToSpider(data) {
     if (isSpiderTypeValid(data))
-        return new Spider((0, Transction_1.anyToTransaction)(data.transaction), data.targets);
+        return new Spider((0, Transction_1.anyToTransaction)(data.transaction), data.spiders);
 }
 exports.anyToSpider = anyToSpider;
 __exportStar(require("./Transction"), exports);

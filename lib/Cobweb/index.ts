@@ -36,11 +36,11 @@ export class Cobweb
                 return false
 
         for (let i: number = 0; i < transaction.targets.length; i ++)
-            if (!(this.spiders[transaction.targets[i]].targets instanceof Array))
+            if (!(this.spiders[transaction.targets[i]].spiders instanceof Array))
                 return false
     
         for (let i: number = 0; i < transaction.targets.length; i ++)
-            this.spiders[transaction.targets[i]].targets!.push(transaction.targets[i])
+            this.spiders[transaction.targets[i]].spiders!.push(transaction.targets[i])
 
         this.spiders[transaction.hash] = new Spider(transaction)
         return true

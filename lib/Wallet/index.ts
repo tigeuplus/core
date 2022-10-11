@@ -61,7 +61,7 @@ export class Wallet
     /**
      * 마지막으로 검증된 거래
      */
-    public omega: [ string, string ]
+    public omegas: [ string, string ]
     /**
      * 저장 경로
      */
@@ -95,7 +95,7 @@ export class Wallet
         this.peers = {}
         this.balance = 0n
         this.cobweb = new Cobweb()
-        this.omega = [ '', '' ]
+        this.omegas = [ '', '' ]
 
         mkdirSync(path.join(this.storage, 'wallet'))
         mkdirSync(path.join(this.storage, 'transactions'))
@@ -126,26 +126,26 @@ export class Wallet
             let transaction: Transaction = new Transaction('', [ transfer ], [ '', '' ])
 
             this.cobweb.add(transaction)
-            this.omega = [ transaction.hash, transaction.hash ]
+            this.omegas = [ transaction.hash, transaction.hash ]
         }
 
         scheduleJob('3 * * * * *', async(): Promise<void> =>
         {
             let spiders: { [ index: string ]: Spider } = anyToSpiders(parse(stringify(this.cobweb.spiders)))!
             for (let i: number = 0; Object.keys(spiders).length; i ++)
-                if (spiders[Object.keys(spiders)[i]].targets.length >= 100)
+                if (spiders[Object.keys(spiders)[i]].spiders.length >= 100)
                 {
-                    for (let j: number = 0; j < spiders[Object.keys(spiders)[i]].targets.length; j ++)
+                    for (let j: number = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j ++)
                     {
                         delete this.cobweb.spiders[Object.keys(spiders)[i]]
-                        if (spiders[spiders[Object.keys(spiders)[i]].targets[j]].targets.length === 0)
-                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].targets[j]]
+                        if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0)
+                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]]
                         else
-                            for (let k: number = 0; k < spiders[Object.keys(spiders)[i]].targets.length; k ++)
-                                if (spiders[Object.keys(spiders)[i]].targets[k] !== spiders[Object.keys(spiders)[i]].targets[j])
-                                    if ((spiders[spiders[Object.keys(spiders)[i]].targets[j]].targets.length - spiders[spiders[Object.keys(spiders)[i]].targets[k]].targets.length) >= 10)
+                            for (let k: number = 0; k < spiders[Object.keys(spiders)[i]].spiders.length; k ++)
+                                if (spiders[Object.keys(spiders)[i]].spiders[k] !== spiders[Object.keys(spiders)[i]].spiders[j])
+                                    if ((spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length - spiders[spiders[Object.keys(spiders)[i]].spiders[k]].spiders.length) >= 10)
                                     {
-                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].targets[j]]
+                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]]
                                         break
                                     }
                     }
@@ -231,7 +231,7 @@ export class Wallet
          */
         transfers: Transfer[]): void
     {
-        let transaction: Transaction = new Transaction(transfers[0].from, transfers, this.calculateTargetTransaction())
+        let transaction: Transaction = new Transaction(transfers[0].from, transfers, this.calculateTargetSpider())
         transaction = new Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash)
 
         this.broadcast(stringify(new Command('Add_Transaction', transaction)))
@@ -250,47 +250,116 @@ export class Wallet
     }
 
     /**
-     * 대상 거래를 계산합니다
+     * 대상 스파이더를 계산합니댜
      * 
      * @since v1.0.0-alpha
      * @returns [ string, string ]
      */
-    public calculateTargetTransaction(): [ string, string ]
+    public calculateTargetSpider(): [ string, string ]
     {
-        let spiders: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
-        for (let i: number = 0; i < 2; i ++)
+        let main: string = this.omegas[Math.floor(Math.random() * this.omegas.length)]
+        if (!this.cobweb.spiders[main])
+            main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
+            
+        let spider: Spider = this.cobweb.spiders[main]
+        let targets: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
+        for (;;)
         {
-            let spider: Spider | undefined = this.cobweb.spiders[this.omega[i]]
-            if (spider)
-                for (let j: number = 0; j < 100; j ++)
+            let valid: boolean = false
+            for (let i: number = 0; i < spider.transaction.targets.length; i ++)
+                if (this.cobweb.spiders[spider.transaction.targets[i]])
                 {
-                    for (;;)
-                    {
-                        let k: number = Math.floor(Math.random() * spider.transaction.targets.length)
-                        if (this.cobweb.spiders[spider.targets[k]])
-                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction))
-                            {
-                                spiders[0][spider.targets[k]] = (spiders[0][spider.targets[k]] || 0) + 1
-                                break
-                            }
-                    }
-
-                    for (;;)
-                    {
-                        let k: number = Math.floor(Math.random() * spider.targets.length)
-                        if (this.cobweb.spiders[spider.targets[k]])
-                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction))
-                            {
-                                spiders[1][spider.targets[k]] = (spiders[1][spider.targets[k]] || 0) + 1
-                                break
-                            }
-                    }
+                    valid = true
+                    break
                 }
+
+            for (let i: number = 0; i < spider.spiders.length; i ++)
+                if (this.cobweb.spiders[spider.spiders[i]])
+                {
+                    valid = true
+                    break
+                }
+
+            if (valid)
+                break
+            else
+            {
+                main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
+                spider = this.cobweb.spiders[main]
+            }
         }
 
-        let ascending: [ string[], string[] ] = [ Object.keys(spiders[0]).sort((a: string, b: string) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a: string, b: string) => spiders[1][b] - spiders[1][a])]
+        for (let i: number = 0; i < 100; i ++)
+        {
+            for (;;)
+            {
+                let hash: string = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
+                if (this.cobweb.spiders[hash])
+                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction))
+                    {
+                        targets[0][hash] = (targets[0][hash] || 0) + 1
+                        break
+                    }
+            }
+
+            for (;;)
+            {
+                let hash: string = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
+                if (this.cobweb.spiders[hash])
+                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction))
+                    {
+                        targets[0][hash] = (targets[0][hash] || 0) + 1
+                        break
+                    }
+            }
+        }
+
+        let ascending: [ string[], string[] ] = [ Object.keys(targets[0]).sort((a: string, b: string) => targets[0][b] - targets[0][a]), Object.keys(targets[1]).sort((a: string, b: string) => targets[1][b] - targets[1][a])]
         return [ ascending[0][0], ascending[1][0] ]
     }
+
+    // /**
+    //  * 대상 거래를 계산합니다
+    //  * 
+    //  * @since v1.0.0-alpha
+    //  * @returns [ string, string ]
+    //  */
+    // public calculateTargetTransaction(): [ string, string ]
+    // {
+    //     let spiders: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
+    //     for (let i: number = 0; i < 2; i ++)
+    //     {
+    //         let spider: Spider | undefined = this.cobweb.spiders[this.omegas[i]]
+    //         if (spider)
+    //             for (let j: number = 0; j < 100; j ++)
+    //             {
+    //                 for (;;)
+    //                 {
+    //                     let k: number = Math.floor(Math.random() * spider.transaction.targets.length)
+    //                     if (this.cobweb.spiders[spider.spiders[k]])
+    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
+    //                         {
+    //                             spiders[0][spider.spiders[k]] = (spiders[0][spider.spiders[k]] || 0) + 1
+    //                             break
+    //                         }
+    //                 }
+
+    //                 for (;;)
+    //                 {
+    //                     let k: number = Math.floor(Math.random() * spider.spiders.length)
+    //                     if (this.cobweb.spiders[spider.spiders[k]])
+    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
+    //                         {
+    //                             spiders[1][spider.spiders[k]] = (spiders[1][spider.spiders[k]] || 0) + 1
+    //                             break
+    //                         }
+    //                 }
+    //             }
+    //     }
+
+    //     let ascending: [ string[], string[] ] = [ Object.keys(spiders[0]).sort((a: string, b: string) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a: string, b: string) => spiders[1][b] - spiders[1][a])]
+    //     return [ ascending[0][0], ascending[1][0] ]
+    // }
 
     private async onConnection(websocket: WebSocket, request: IncomingMessage): Promise<void>
     {
@@ -334,8 +403,8 @@ export class Wallet
 
                     break
 
-                case 'Get_Omega':
-                    return websocket.send(stringify(new Command('Get_Omega_Result', this.omega)))
+                case 'Get_omegas':
+                    return websocket.send(stringify(new Command('Get_omegas_Result', this.omegas)))
             }
     }
 
@@ -418,7 +487,7 @@ export class Wallet
         }
     }
     
-    private getOmega(websocket: WebSocket): Promise<[ string, string ] | undefined>
+    private getomegas(websocket: WebSocket): Promise<[ string, string ] | undefined>
     {
         return new Promise((resolve: any, reject: any): void =>
         {
@@ -430,12 +499,12 @@ export class Wallet
 
             let onMessage: ((message: any) => void) = ((message: any): void =>
             {
-                let omega: [ string, string ] | undefined
+                let omegas: [ string, string ] | undefined
                 let command: Command | undefined = anyToCommand(message)
                 if (command)
                     switch (command.name)
                     {
-                        case 'Get_Omega_Result':
+                        case 'Get_omegas_Result':
                             if (command.data instanceof Array)
                                 if (command.data.length === 2)
                                 {
@@ -448,21 +517,21 @@ export class Wallet
                                         }
     
                                     if (succes)
-                                        omega = [ command.data[0], command.data[1] ]
+                                        omegas = [ command.data[0], command.data[1] ]
                                 }
                     }
 
                 if (stop)
                     return resolve()
 
-                if (omega)
-                    return resolve(omega)
+                if (omegas)
+                    return resolve(omegas)
 
                 websocket.once('message', onMessage)
             })
 
             websocket.once('message', onMessage)
-            websocket.send(stringify(new Command('Get_Omega')))
+            websocket.send(stringify(new Command('Get_omegas')))
         })
     }
 

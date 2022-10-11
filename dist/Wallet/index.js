@@ -81,7 +81,7 @@ class Wallet {
     /**
      * 마지막으로 검증된 거래
      */
-    omega;
+    omegas;
     /**
      * 저장 경로
      */
@@ -113,7 +113,7 @@ class Wallet {
         this.peers = {};
         this.balance = 0n;
         this.cobweb = new Cobweb_1.Cobweb();
-        this.omega = ['', ''];
+        this.omegas = ['', ''];
         (0, fs_1.mkdirSync)(path.join(this.storage, 'wallet'));
         (0, fs_1.mkdirSync)(path.join(this.storage, 'transactions'));
         (0, fs_1.mkdirSync)(path.join(this.storage, 'snapshots'));
@@ -136,21 +136,21 @@ class Wallet {
             let transfer = new Cobweb_1.Transfer('', this.address, 1000000000000n);
             let transaction = new Cobweb_1.Transaction('', [transfer], ['', '']);
             this.cobweb.add(transaction);
-            this.omega = [transaction.hash, transaction.hash];
+            this.omegas = [transaction.hash, transaction.hash];
         }
         (0, node_schedule_1.scheduleJob)('3 * * * * *', async () => {
             let spiders = (0, Cobweb_1.anyToSpiders)(parse(stringify(this.cobweb.spiders)));
             for (let i = 0; Object.keys(spiders).length; i++)
-                if (spiders[Object.keys(spiders)[i]].targets.length >= 100) {
-                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].targets.length; j++) {
+                if (spiders[Object.keys(spiders)[i]].spiders.length >= 100) {
+                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j++) {
                         delete this.cobweb.spiders[Object.keys(spiders)[i]];
-                        if (spiders[spiders[Object.keys(spiders)[i]].targets[j]].targets.length === 0)
-                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].targets[j]];
+                        if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0)
+                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
                         else
-                            for (let k = 0; k < spiders[Object.keys(spiders)[i]].targets.length; k++)
-                                if (spiders[Object.keys(spiders)[i]].targets[k] !== spiders[Object.keys(spiders)[i]].targets[j])
-                                    if ((spiders[spiders[Object.keys(spiders)[i]].targets[j]].targets.length - spiders[spiders[Object.keys(spiders)[i]].targets[k]].targets.length) >= 10) {
-                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].targets[j]];
+                            for (let k = 0; k < spiders[Object.keys(spiders)[i]].spiders.length; k++)
+                                if (spiders[Object.keys(spiders)[i]].spiders[k] !== spiders[Object.keys(spiders)[i]].spiders[j])
+                                    if ((spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length - spiders[spiders[Object.keys(spiders)[i]].spiders[k]].spiders.length) >= 10) {
+                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
                                         break;
                                     }
                     }
@@ -213,7 +213,7 @@ class Wallet {
      * 전송 데이터
      */
     transfers) {
-        let transaction = new Cobweb_1.Transaction(transfers[0].from, transfers, this.calculateTargetTransaction());
+        let transaction = new Cobweb_1.Transaction(transfers[0].from, transfers, this.calculateTargetSpider());
         transaction = new Cobweb_1.Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash);
         this.broadcast(stringify(new Command_1.Command('Add_Transaction', transaction)));
     }
@@ -228,38 +228,97 @@ class Wallet {
             this.peers[Object.keys(this.peers)[i]].websocket.send(message);
     }
     /**
-     * 대상 거래를 계산합니다
+     * 대상 스파이더를 계산합니댜
      *
      * @since v1.0.0-alpha
      * @returns [ string, string ]
      */
-    calculateTargetTransaction() {
-        let spiders = [{}, {}];
-        for (let i = 0; i < 2; i++) {
-            let spider = this.cobweb.spiders[this.omega[i]];
-            if (spider)
-                for (let j = 0; j < 100; j++) {
-                    for (;;) {
-                        let k = Math.floor(Math.random() * spider.transaction.targets.length);
-                        if (this.cobweb.spiders[spider.targets[k]])
-                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction)) {
-                                spiders[0][spider.targets[k]] = (spiders[0][spider.targets[k]] || 0) + 1;
-                                break;
-                            }
-                    }
-                    for (;;) {
-                        let k = Math.floor(Math.random() * spider.targets.length);
-                        if (this.cobweb.spiders[spider.targets[k]])
-                            if (this.isTransactionValid(this.cobweb.spiders[spider.targets[k]].transaction)) {
-                                spiders[1][spider.targets[k]] = (spiders[1][spider.targets[k]] || 0) + 1;
-                                break;
-                            }
-                    }
+    calculateTargetSpider() {
+        let main = this.omegas[Math.floor(Math.random() * this.omegas.length)];
+        if (!this.cobweb.spiders[main])
+            main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
+        let spider = this.cobweb.spiders[main];
+        let targets = [{}, {}];
+        for (;;) {
+            let valid = false;
+            for (let i = 0; i < spider.transaction.targets.length; i++)
+                if (this.cobweb.spiders[spider.transaction.targets[i]]) {
+                    valid = true;
+                    break;
                 }
+            for (let i = 0; i < spider.spiders.length; i++)
+                if (this.cobweb.spiders[spider.spiders[i]]) {
+                    valid = true;
+                    break;
+                }
+            if (valid)
+                break;
+            else {
+                main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
+                spider = this.cobweb.spiders[main];
+            }
         }
-        let ascending = [Object.keys(spiders[0]).sort((a, b) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a, b) => spiders[1][b] - spiders[1][a])];
+        for (let i = 0; i < 100; i++) {
+            for (;;) {
+                let hash = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
+                if (this.cobweb.spiders[hash])
+                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction)) {
+                        targets[0][hash] = (targets[0][hash] || 0) + 1;
+                        break;
+                    }
+            }
+            for (;;) {
+                let hash = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
+                if (this.cobweb.spiders[hash])
+                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction)) {
+                        targets[0][hash] = (targets[0][hash] || 0) + 1;
+                        break;
+                    }
+            }
+        }
+        let ascending = [Object.keys(targets[0]).sort((a, b) => targets[0][b] - targets[0][a]), Object.keys(targets[1]).sort((a, b) => targets[1][b] - targets[1][a])];
         return [ascending[0][0], ascending[1][0]];
     }
+    // /**
+    //  * 대상 거래를 계산합니다
+    //  * 
+    //  * @since v1.0.0-alpha
+    //  * @returns [ string, string ]
+    //  */
+    // public calculateTargetTransaction(): [ string, string ]
+    // {
+    //     let spiders: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
+    //     for (let i: number = 0; i < 2; i ++)
+    //     {
+    //         let spider: Spider | undefined = this.cobweb.spiders[this.omegas[i]]
+    //         if (spider)
+    //             for (let j: number = 0; j < 100; j ++)
+    //             {
+    //                 for (;;)
+    //                 {
+    //                     let k: number = Math.floor(Math.random() * spider.transaction.targets.length)
+    //                     if (this.cobweb.spiders[spider.spiders[k]])
+    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
+    //                         {
+    //                             spiders[0][spider.spiders[k]] = (spiders[0][spider.spiders[k]] || 0) + 1
+    //                             break
+    //                         }
+    //                 }
+    //                 for (;;)
+    //                 {
+    //                     let k: number = Math.floor(Math.random() * spider.spiders.length)
+    //                     if (this.cobweb.spiders[spider.spiders[k]])
+    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
+    //                         {
+    //                             spiders[1][spider.spiders[k]] = (spiders[1][spider.spiders[k]] || 0) + 1
+    //                             break
+    //                         }
+    //                 }
+    //             }
+    //     }
+    //     let ascending: [ string[], string[] ] = [ Object.keys(spiders[0]).sort((a: string, b: string) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a: string, b: string) => spiders[1][b] - spiders[1][a])]
+    //     return [ ascending[0][0], ascending[1][0] ]
+    // }
     async onConnection(websocket, request) {
         websocket.on('close', () => this.onClose(request.headers.host));
         websocket.on('message', async (data) => this.onMessage(websocket, `ws://${request.headers.host}`, parse(data.toString('utf8'))));
@@ -290,8 +349,8 @@ class Wallet {
                         if (this.isTransactionTypeValid(transaction))
                             this.cobweb.add(transaction);
                     break;
-                case 'Get_Omega':
-                    return websocket.send(stringify(new Command_1.Command('Get_Omega_Result', this.omega)));
+                case 'Get_omegas':
+                    return websocket.send(stringify(new Command_1.Command('Get_omegas_Result', this.omegas)));
             }
     }
     /**
@@ -355,18 +414,18 @@ class Wallet {
             (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
         }
     }
-    getOmega(websocket) {
+    getomegas(websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
                 stop = true;
             }, this.timeout);
             let onMessage = ((message) => {
-                let omega;
+                let omegas;
                 let command = (0, Command_1.anyToCommand)(message);
                 if (command)
                     switch (command.name) {
-                        case 'Get_Omega_Result':
+                        case 'Get_omegas_Result':
                             if (command.data instanceof Array)
                                 if (command.data.length === 2) {
                                     let succes = true;
@@ -376,17 +435,17 @@ class Wallet {
                                             break;
                                         }
                                     if (succes)
-                                        omega = [command.data[0], command.data[1]];
+                                        omegas = [command.data[0], command.data[1]];
                                 }
                     }
                 if (stop)
                     return resolve();
-                if (omega)
-                    return resolve(omega);
+                if (omegas)
+                    return resolve(omegas);
                 websocket.once('message', onMessage);
             });
             websocket.once('message', onMessage);
-            websocket.send(stringify(new Command_1.Command('Get_Omega')));
+            websocket.send(stringify(new Command_1.Command('Get_omegas')));
         });
     }
     getBalances(websocket) {

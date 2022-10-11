@@ -4,7 +4,7 @@ import { Transaction } from './Transction';
  *
  * @since v1.0.0-alpha
  * @param transaction 거래
- * @param targets 대상
+ * @param spiders 이 스피아더를 승인하는 스파이더
  */
 export declare class Spider {
     /**
@@ -12,18 +12,18 @@ export declare class Spider {
      */
     transaction: Transaction;
     /**
-     * 대상
+     * 이 스피아더를 승인하는 스파이더
      */
-    targets: string[];
+    spiders: string[];
     constructor(
     /**
      * 거래
      */
     transaction: Transaction, 
     /**
-     * 대상
+     * 이 스피아더를 승인하는 스파이더
      */
-    targets?: string[]);
+    spiders?: string[]);
 }
 /**
  * 데이터가 스파이더인지 검증합니다

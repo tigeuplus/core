@@ -5,7 +5,7 @@ import { anyToTransaction, isTransactionTypeValid, Transaction } from './Transct
  * 
  * @since v1.0.0-alpha
  * @param transaction 거래
- * @param targets 대상
+ * @param spiders 이 스피아더를 승인하는 스파이더
  */
 export class Spider
 {
@@ -14,9 +14,9 @@ export class Spider
      */
     public transaction: Transaction
     /**
-     * 대상
+     * 이 스피아더를 승인하는 스파이더
      */
-    public targets: string[]
+    public spiders: string[]
 
     constructor(
         /**
@@ -24,12 +24,12 @@ export class Spider
          */
         transaction: Transaction, 
         /**
-         * 대상
+         * 이 스피아더를 승인하는 스파이더
          */
-        targets: string[] = [])
+        spiders: string[] = [])
     {
         this.transaction = transaction
-        this.targets = targets
+        this.spiders = spiders
     }
 }
 
@@ -43,10 +43,10 @@ export class Spider
 export function isSpiderTypeValid(data: any): boolean
 {
     if (data instanceof Object)
-        if (data.targets instanceof Array)
+        if (data.spiders instanceof Array)
         {
-            for (let i: number = 0; i < data.targets.length; i ++)
-                if (typeof data.targets[i] !== 'string')
+            for (let i: number = 0; i < data.spiders.length; i ++)
+                if (typeof data.spiders[i] !== 'string')
                     return false
                 
 
@@ -66,7 +66,7 @@ export function isSpiderTypeValid(data: any): boolean
 export function anyToSpider(data: any): Spider | undefined
 {
     if (isSpiderTypeValid(data))
-        return new Spider(anyToTransaction(data.transaction)!, data.targets)
+        return new Spider(anyToTransaction(data.transaction)!, data.spiders)
 }
 
 export * from './Transction'
