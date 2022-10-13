@@ -99,7 +99,11 @@ export declare class Wallet {
      * @since v1.0.0-alpha
      * @param message 데이터
      */
-    broadcast(message: string): void;
+    broadcast(
+    /**
+     * 메시지
+     */
+    message: string): void;
     /**
      * 대상 스파이더를 계산합니댜
      *
@@ -116,7 +120,11 @@ export declare class Wallet {
      * @param transaction 거래
      * @returns boolean
      */
-    isTransactionTypeValid(transaction: Transaction): boolean;
+    isTransactionTypeValid(
+    /**
+     * 거래
+     */
+    transaction: Transaction): boolean;
     /**
      * 거래를 검증합니다
      *
@@ -125,7 +133,15 @@ export declare class Wallet {
      * @param spider 기존 스파이더 여부
      * @returns boolean
      */
-    isTransactionValid(transaction: Transaction, spider?: boolean): boolean;
+    isTransactionValid(
+    /**
+     * 거래
+     */
+    transaction: Transaction, 
+    /**
+     * 스파이더 여부
+     */
+    spider?: boolean): boolean;
     private onClose;
     private init;
     private getomegas;

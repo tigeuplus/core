@@ -243,7 +243,11 @@ export class Wallet
      * @since v1.0.0-alpha
      * @param message 데이터
      */
-    public broadcast(message: string): void
+    public broadcast(
+        /**
+         * 메시지
+         */
+        message: string): void
     {
         for (let i: number = 0; i < Object.keys(this.peers).length; i ++)
             this.peers[Object.keys(this.peers)[i]].websocket.send(message)
@@ -414,7 +418,11 @@ export class Wallet
      * @param transaction 거래
      * @returns boolean
      */
-    public isTransactionTypeValid(transaction: Transaction): boolean
+    public isTransactionTypeValid(
+        /**
+         * 거래
+         */
+        transaction: Transaction): boolean
     {
         for (let i: number = 0; i < transaction.targets.length; i ++)
             if (!this.cobweb.spiders[transaction.targets[i]])
@@ -431,7 +439,15 @@ export class Wallet
      * @param spider 기존 스파이더 여부
      * @returns boolean
      */
-    public isTransactionValid(transaction: Transaction, spider: boolean = false): boolean
+    public isTransactionValid(
+        /**
+         * 거래
+         */
+        transaction: Transaction, 
+        /**
+         * 스파이더 여부
+         */
+        spider: boolean = false): boolean
     {
         if (spider)
             for (let i: number = 0; i < transaction.targets.length; i ++)

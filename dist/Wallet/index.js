@@ -223,7 +223,11 @@ class Wallet {
      * @since v1.0.0-alpha
      * @param message 데이터
      */
-    broadcast(message) {
+    broadcast(
+    /**
+     * 메시지
+     */
+    message) {
         for (let i = 0; i < Object.keys(this.peers).length; i++)
             this.peers[Object.keys(this.peers)[i]].websocket.send(message);
     }
@@ -360,7 +364,11 @@ class Wallet {
      * @param transaction 거래
      * @returns boolean
      */
-    isTransactionTypeValid(transaction) {
+    isTransactionTypeValid(
+    /**
+     * 거래
+     */
+    transaction) {
         for (let i = 0; i < transaction.targets.length; i++)
             if (!this.cobweb.spiders[transaction.targets[i]])
                 return false;
@@ -374,7 +382,15 @@ class Wallet {
      * @param spider 기존 스파이더 여부
      * @returns boolean
      */
-    isTransactionValid(transaction, spider = false) {
+    isTransactionValid(
+    /**
+     * 거래
+     */
+    transaction, 
+    /**
+     * 스파이더 여부
+     */
+    spider = false) {
         if (spider)
             for (let i = 0; i < transaction.targets.length; i++) {
                 let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
