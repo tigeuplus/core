@@ -242,17 +242,19 @@ class Wallet {
         for (;;) {
             let valid = false;
             for (let i = 0; i < spider.transaction.targets.length; i++)
-                if (this.cobweb.spiders[spider.transaction.targets[i]]) {
-                    valid = true;
-                    break;
-                }
-            if (valid) {
-                valid = false;
-                for (let i = 0; i < spider.spiders.length; i++)
-                    if (this.cobweb.spiders[spider.spiders[i]]) {
+                if (this.cobweb.spiders[spider.transaction.targets[i]])
+                    if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true)) {
                         valid = true;
                         break;
                     }
+            if (valid) {
+                valid = false;
+                for (let i = 0; i < spider.spiders.length; i++)
+                    if (this.cobweb.spiders[spider.spiders[i]])
+                        if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true)) {
+                            valid = true;
+                            break;
+                        }
                 if (!valid)
                     break;
             }

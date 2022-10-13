@@ -268,20 +268,22 @@ export class Wallet
             let valid: boolean = false
             for (let i: number = 0; i < spider.transaction.targets.length; i ++)
                 if (this.cobweb.spiders[spider.transaction.targets[i]])
-                {
-                    valid = true
-                    break
-                }
+                    if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true))
+                    {
+                        valid = true
+                        break
+                    }
 
             if (valid)
             {
                 valid = false
                 for (let i: number = 0; i < spider.spiders.length; i ++)
                     if (this.cobweb.spiders[spider.spiders[i]])
-                    {
-                        valid = true
-                        break
-                    }
+                        if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true))
+                        {
+                            valid = true
+                            break
+                        }
                 
                 if (!valid)
                     break
