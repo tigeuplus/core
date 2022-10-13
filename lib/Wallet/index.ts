@@ -257,11 +257,11 @@ export class Wallet
      */
     public calculateTargetSpider(): [ string, string ]
     {
-        let main: string = this.omegas[Math.floor(Math.random() * this.omegas.length)]
-        if (!this.cobweb.spiders[main])
-            main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
+        let hash: string = this.omegas[Math.floor(Math.random() * this.omegas.length)]
+        if (!this.cobweb.spiders[hash])
+        hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
             
-        let spider: Spider = this.cobweb.spiders[main]
+        let spider: Spider = this.cobweb.spiders[hash]
         let targets: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
         for (;;)
         {
@@ -273,49 +273,46 @@ export class Wallet
                     break
                 }
 
-            for (let i: number = 0; i < spider.spiders.length; i ++)
-                if (this.cobweb.spiders[spider.spiders[i]])
-                {
-                    valid = true
-                    break
-                }
-
             if (valid)
-                break
-            else
             {
-                main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
-                spider = this.cobweb.spiders[main]
+                valid = false
+                for (let i: number = 0; i < spider.spiders.length; i ++)
+                    if (this.cobweb.spiders[spider.spiders[i]])
+                    {
+                        valid = true
+                        break
+                    }
+                
+                if (!valid)
+                    break
             }
+
+            hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
+            spider = this.cobweb.spiders[hash]
         }
 
         for (let i: number = 0; i < 100; i ++)
-        {
-            for (;;)
+            for (let j: number = 0; j < targets.length; j ++)
             {
-                let hash: string = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
-                if (this.cobweb.spiders[hash])
-                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction))
+                let k: string
+                if (j === 0 || (j === 1 && spider.spiders.length === 0))
+                    k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
+                else
+                    k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
+
+                if (this.cobweb.spiders[k])
+                    if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true))
                     {
-                        targets[0][hash] = (targets[0][hash] || 0) + 1
+                        targets[j][k] = (targets[j][k] || 0) + 1
                         break
                     }
             }
 
-            for (;;)
-            {
-                let hash: string = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
-                if (this.cobweb.spiders[hash])
-                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction))
-                    {
-                        targets[0][hash] = (targets[0][hash] || 0) + 1
-                        break
-                    }
-            }
-        }
+        let results: string[] = []
+        for (let i: number = 0; i < 2; i ++)
+            results.push(Object.keys(targets[i]).sort((a: string, b: string) => targets[i][b] - targets[i][a])[0])
 
-        let ascending: [ string[], string[] ] = [ Object.keys(targets[0]).sort((a: string, b: string) => targets[0][b] - targets[0][a]), Object.keys(targets[1]).sort((a: string, b: string) => targets[1][b] - targets[1][a])]
-        return [ ascending[0][0], ascending[1][0] ]
+        return [ results[0], results[1] ]
     }
 
     // /**

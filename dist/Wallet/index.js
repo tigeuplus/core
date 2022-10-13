@@ -234,10 +234,10 @@ class Wallet {
      * @returns [ string, string ]
      */
     calculateTargetSpider() {
-        let main = this.omegas[Math.floor(Math.random() * this.omegas.length)];
-        if (!this.cobweb.spiders[main])
-            main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
-        let spider = this.cobweb.spiders[main];
+        let hash = this.omegas[Math.floor(Math.random() * this.omegas.length)];
+        if (!this.cobweb.spiders[hash])
+            hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
+        let spider = this.cobweb.spiders[hash];
         let targets = [{}, {}];
         for (;;) {
             let valid = false;
@@ -246,38 +246,36 @@ class Wallet {
                     valid = true;
                     break;
                 }
-            for (let i = 0; i < spider.spiders.length; i++)
-                if (this.cobweb.spiders[spider.spiders[i]]) {
-                    valid = true;
+            if (valid) {
+                valid = false;
+                for (let i = 0; i < spider.spiders.length; i++)
+                    if (this.cobweb.spiders[spider.spiders[i]]) {
+                        valid = true;
+                        break;
+                    }
+                if (!valid)
                     break;
-                }
-            if (valid)
-                break;
-            else {
-                main = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
-                spider = this.cobweb.spiders[main];
             }
+            hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
+            spider = this.cobweb.spiders[hash];
         }
-        for (let i = 0; i < 100; i++) {
-            for (;;) {
-                let hash = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
-                if (this.cobweb.spiders[hash])
-                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction)) {
-                        targets[0][hash] = (targets[0][hash] || 0) + 1;
+        for (let i = 0; i < 100; i++)
+            for (let j = 0; j < targets.length; j++) {
+                let k;
+                if (j === 0 || (j === 1 && spider.spiders.length === 0))
+                    k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
+                else
+                    k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
+                if (this.cobweb.spiders[k])
+                    if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true)) {
+                        targets[j][k] = (targets[j][k] || 0) + 1;
                         break;
                     }
             }
-            for (;;) {
-                let hash = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
-                if (this.cobweb.spiders[hash])
-                    if (this.isTransactionValid(this.cobweb.spiders[hash].transaction)) {
-                        targets[0][hash] = (targets[0][hash] || 0) + 1;
-                        break;
-                    }
-            }
-        }
-        let ascending = [Object.keys(targets[0]).sort((a, b) => targets[0][b] - targets[0][a]), Object.keys(targets[1]).sort((a, b) => targets[1][b] - targets[1][a])];
-        return [ascending[0][0], ascending[1][0]];
+        let results = [];
+        for (let i = 0; i < 2; i++)
+            results.push(Object.keys(targets[i]).sort((a, b) => targets[i][b] - targets[i][a])[0]);
+        return [results[0], results[1]];
     }
     // /**
     //  * 대상 거래를 계산합니다
