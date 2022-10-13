@@ -108,9 +108,9 @@ export declare class Wallet {
      * 대상 스파이더를 계산합니댜
      *
      * @since v1.0.0-alpha
-     * @returns [ string, string ]
+     * @returns string[]
      */
-    calculateTargetSpider(): [string, string];
+    calculateTargetSpider(): string[];
     private onConnection;
     private onMessage;
     /**

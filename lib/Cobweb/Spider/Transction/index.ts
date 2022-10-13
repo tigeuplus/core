@@ -31,7 +31,7 @@ export class Transaction
     /**
      * 대상
      */
-    public targets: [ string, string ]
+    public targets: string[]
     /**
      * 전송 데이터
      */
@@ -57,7 +57,7 @@ export class Transaction
         /**
          * 대상
          */
-        targets: [ string, string ], 
+        targets: string[], 
         /**
          * 생성된 시간
          */

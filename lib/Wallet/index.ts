@@ -257,13 +257,13 @@ export class Wallet
      * 대상 스파이더를 계산합니댜
      * 
      * @since v1.0.0-alpha
-     * @returns [ string, string ]
+     * @returns string[]
      */
-    public calculateTargetSpider(): [ string, string ]
+    public calculateTargetSpider(): string[]
     {
         let hash: string = this.omegas[Math.floor(Math.random() * this.omegas.length)]
         if (!this.cobweb.spiders[hash])
-        hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
+            hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
             
         let spider: Spider = this.cobweb.spiders[hash]
         let targets: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
@@ -289,7 +289,7 @@ export class Wallet
                             break
                         }
                 
-                if (!valid)
+                if (valid)
                     break
             }
 
@@ -301,12 +301,17 @@ export class Wallet
             for (let j: number = 0; j < targets.length; j ++)
                 for (;;)
                 {
-                    let k: string
-                    if (j === 0 || (j === 1 && spider.spiders.length === 0))
+                    let k: string | undefined = undefined
+                    if (spider.spiders.length === 0 || spider.transaction.targets.length !== 0)
                         k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
-                    else
-                        k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
     
+                    k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
+                    if (!k)
+                    {
+                        targets[j][hash] = (targets[j][hash] || 0) + 1
+                        break
+                    }
+
                     if (this.cobweb.spiders[k])
                         if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true))
                         {
@@ -319,7 +324,7 @@ export class Wallet
         for (let i: number = 0; i < 2; i ++)
             results.push(Object.keys(targets[i]).sort((a: string, b: string) => targets[i][b] - targets[i][a])[0])
 
-        return [ results[0], results[1] ]
+        return results
     }
 
     // /**
