@@ -113,7 +113,7 @@ class Wallet {
         this.peers = {};
         this.balance = 0n;
         this.cobweb = new Cobweb_1.Cobweb();
-        this.omegas = ['', ''];
+        this.omegas = [];
         (0, fs_1.mkdirSync)(path.join(this.storage, 'wallet'));
         (0, fs_1.mkdirSync)(path.join(this.storage, 'transactions'));
         (0, fs_1.mkdirSync)(path.join(this.storage, 'snapshots'));
@@ -355,8 +355,10 @@ class Wallet {
                 case 'Add_Transaction':
                     let transaction = (0, Cobweb_1.anyToTransaction)(command.data);
                     if (transaction)
-                        if (this.isTransactionTypeValid(transaction))
+                        if (this.isTransactionTypeValid(transaction)) {
                             this.cobweb.add(transaction);
+                            this.omegas = transaction.targets;
+                        }
                     break;
                 case 'Get_omegas':
                     return websocket.send(stringify(new Command_1.Command('Get_omegas_Result', this.omegas)));

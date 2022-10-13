@@ -42,7 +42,7 @@ export declare class Wallet {
     /**
      * 마지막으로 검증된 거래
      */
-    omegas: [string, string];
+    omegas: string[];
     /**
      * 저장 경로
      */

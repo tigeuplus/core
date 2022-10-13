@@ -61,7 +61,7 @@ export class Wallet
     /**
      * 마지막으로 검증된 거래
      */
-    public omegas: [ string, string ]
+    public omegas: string[]
     /**
      * 저장 경로
      */
@@ -95,7 +95,7 @@ export class Wallet
         this.peers = {}
         this.balance = 0n
         this.cobweb = new Cobweb()
-        this.omegas = [ '', '' ]
+        this.omegas = []
 
         mkdirSync(path.join(this.storage, 'wallet'))
         mkdirSync(path.join(this.storage, 'transactions'))
@@ -409,7 +409,10 @@ export class Wallet
                     let transaction: Transaction | undefined = anyToTransaction(command.data)
                     if (transaction)
                         if (this.isTransactionTypeValid(transaction))
+                        {
                             this.cobweb.add(transaction)
+                            this.omegas = transaction.targets
+                        }
 
                     break
 
