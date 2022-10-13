@@ -10,7 +10,7 @@
     "author": "cobeol <cobeol0111@gmail.com>",
     "license": "ISC",
     "dependencies": {
-        "@tigeuplus/core": "^1.0.0-beta.4",
+        "@tigeuplus/core": "^1.0.0-beta.5",
         "express": "^4.18.2"
     },
     "devDependencies": {

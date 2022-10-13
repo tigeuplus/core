@@ -299,20 +299,21 @@ export class Wallet
 
         for (let i: number = 0; i < 100; i ++)
             for (let j: number = 0; j < targets.length; j ++)
-            {
-                let k: string
-                if (j === 0 || (j === 1 && spider.spiders.length === 0))
-                    k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
-                else
-                    k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
-
-                if (this.cobweb.spiders[k])
-                    if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true))
-                    {
-                        targets[j][k] = (targets[j][k] || 0) + 1
-                        break
-                    }
-            }
+                for (;;)
+                {
+                    let k: string
+                    if (j === 0 || (j === 1 && spider.spiders.length === 0))
+                        k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
+                    else
+                        k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
+    
+                    if (this.cobweb.spiders[k])
+                        if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true))
+                        {
+                            targets[j][k] = (targets[j][k] || 0) + 1
+                            break
+                        }
+                }
 
         let results: string[] = []
         for (let i: number = 0; i < 2; i ++)

@@ -266,18 +266,19 @@ class Wallet {
             spider = this.cobweb.spiders[hash];
         }
         for (let i = 0; i < 100; i++)
-            for (let j = 0; j < targets.length; j++) {
-                let k;
-                if (j === 0 || (j === 1 && spider.spiders.length === 0))
-                    k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
-                else
-                    k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
-                if (this.cobweb.spiders[k])
-                    if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true)) {
-                        targets[j][k] = (targets[j][k] || 0) + 1;
-                        break;
-                    }
-            }
+            for (let j = 0; j < targets.length; j++)
+                for (;;) {
+                    let k;
+                    if (j === 0 || (j === 1 && spider.spiders.length === 0))
+                        k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
+                    else
+                        k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
+                    if (this.cobweb.spiders[k])
+                        if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true)) {
+                            targets[j][k] = (targets[j][k] || 0) + 1;
+                            break;
+                        }
+                }
         let results = [];
         for (let i = 0; i < 2; i++)
             results.push(Object.keys(targets[i]).sort((a, b) => targets[i][b] - targets[i][a])[0]);
