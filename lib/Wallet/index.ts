@@ -315,30 +315,33 @@ export class Wallet
         let targets: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
         for (;;)
         {
-            let valid: boolean = false
-            for (let i: number = 0; i < spider.transaction.targets.length; i ++)
-                if (this.cobweb.spiders[spider.transaction.targets[i]])
-                    if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true))
-                    {
-                        valid = true
-                        break
-                    }
-
-            if (valid)
+            if (this.isTransactionValid(spider.transaction))
             {
-                valid = false
-                for (let i: number = 0; i < spider.spiders.length; i ++)
-                    if (this.cobweb.spiders[spider.spiders[i]])
-                        if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true))
+                let valid: boolean = false
+                for (let i: number = 0; i < spider.transaction.targets.length; i ++)
+                    if (this.cobweb.spiders[spider.transaction.targets[i]])
+                        if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true))
                         {
                             valid = true
                             break
                         }
-                
+    
                 if (valid)
-                    break
+                {
+                    valid = false
+                    for (let i: number = 0; i < spider.spiders.length; i ++)
+                        if (this.cobweb.spiders[spider.spiders[i]])
+                            if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true))
+                            {
+                                valid = true
+                                break
+                            }
+                    
+                    if (valid)
+                        break
+                }
             }
-
+            
             hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)]
             spider = this.cobweb.spiders[hash]
         }

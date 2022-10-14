@@ -279,23 +279,25 @@ class Wallet {
         let spider = this.cobweb.spiders[hash];
         let targets = [{}, {}];
         for (;;) {
-            let valid = false;
-            for (let i = 0; i < spider.transaction.targets.length; i++)
-                if (this.cobweb.spiders[spider.transaction.targets[i]])
-                    if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true)) {
-                        valid = true;
-                        break;
-                    }
-            if (valid) {
-                valid = false;
-                for (let i = 0; i < spider.spiders.length; i++)
-                    if (this.cobweb.spiders[spider.spiders[i]])
-                        if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true)) {
+            if (this.isTransactionValid(spider.transaction)) {
+                let valid = false;
+                for (let i = 0; i < spider.transaction.targets.length; i++)
+                    if (this.cobweb.spiders[spider.transaction.targets[i]])
+                        if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true)) {
                             valid = true;
                             break;
                         }
-                if (valid)
-                    break;
+                if (valid) {
+                    valid = false;
+                    for (let i = 0; i < spider.spiders.length; i++)
+                        if (this.cobweb.spiders[spider.spiders[i]])
+                            if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true)) {
+                                valid = true;
+                                break;
+                            }
+                    if (valid)
+                        break;
+                }
             }
             hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
             spider = this.cobweb.spiders[hash];
