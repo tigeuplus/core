@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isTransactionValid = exports.isTransactionNonceValid = exports.isTransactionHashValid = exports.isTransactionTransfersValid = exports.calculateTransactionNonce = exports.calculateTransactionHash = exports.anyToTransaction = exports.isTransactionTypeValid = exports.Transaction = void 0;
+exports.isTransactionTargetsValid = exports.isTransactionValid = exports.isTransactionNonceValid = exports.isTransactionHashValid = exports.isTransactionTransfersValid = exports.calculateTransactionNonce = exports.calculateTransactionHash = exports.anyToTransaction = exports.isTransactionTypeValid = exports.Transaction = void 0;
 const crypto_1 = require("crypto");
 const Transfer_1 = require("./Transfer");
 let hexToBinary = require('hex-to-binary');
@@ -238,8 +238,23 @@ function isTransactionValid(
  * 거래
  */
 transaction) {
-    return isTransactionHashValid(transaction) && isTransactionNonceValid(transaction) && isTransactionTransfersValid(transaction);
+    return isTransactionHashValid(transaction) && isTransactionNonceValid(transaction) && isTransactionTransfersValid(transaction) && isTransactionTargetsValid(transaction);
 }
 exports.isTransactionValid = isTransactionValid;
+/**
+ * 거래 타겟을 검증합니다
+ *
+ * @since v1.0.0-beta
+ * @param transaction 거래
+ * @returns boolean
+ */
+function isTransactionTargetsValid(
+/**
+ * 거래
+ */
+transaction) {
+    return transaction.targets.length === 2;
+}
+exports.isTransactionTargetsValid = isTransactionTargetsValid;
 __exportStar(require("./Transfer"), exports);
 //# sourceMappingURL=index.js.map

@@ -152,7 +152,7 @@ export declare class Wallet {
     repeat?: boolean): boolean;
     private onClose;
     private init;
-    private getomegas;
+    private getOmegas;
     private getBalances;
     private getSpiders;
     private addPeer;

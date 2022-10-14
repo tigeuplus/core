@@ -469,12 +469,11 @@ export class Wallet
             for (let i: number = 0; i < transaction.targets.length; i ++)
             {
                 let t: Transaction | undefined = this.cobweb.spiders[transaction.targets[i]]?.transaction
-                if (spider)
-                    if (!t)
-                        return false
-
                 if (t)
                     if (!this.isTransactionValid(t, true, false))
+                        return false
+                else
+                    if (spider)
                         return false
             }
 
@@ -490,29 +489,37 @@ export class Wallet
     private async init(websocket: WebSocket, url: string): Promise<void>
     {
         let peers: { [ index: string ]: string } | undefined = await this.getPeers(websocket)
-        if (!peers)
+        if (peers)
+            await this.addPeer(websocket, url, peers)
+        else
             throw new Error()
 
-        await this.addPeer(websocket, url, peers)
         let spiders: { [ index: string ]: Spider } | undefined = await this.getSpiders(websocket)
-        if (!spiders)
+        if  (spiders)
+            this.cobweb = new Cobweb(spiders)
+        else
             throw new Error()
 
-        this.cobweb = new Cobweb(spiders)
+        let omegas: string[] | undefined = await this.getOmegas(websocket)
+        if (omegas)
+            this.omegas = omegas
+        else    
+            throw new Error()
+
         let balances: { [ index: string ]: bigint } | undefined = await this.getBalances(websocket)
-        if (!balances)
+        if (balances)
+            for (let i: number = 0; i < Object.keys(balances).length; i ++)
+            {    
+                if (Object.keys(balances)[i] === this.address)
+                    this.balance = balances[Object.keys(balances)[i]]
+
+                writeFileSync(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' })
+            }
+        else
             throw new Error()
-
-        for (let i: number = 0; i < Object.keys(balances).length; i ++)
-        {    
-            if (Object.keys(balances)[i] === this.address)
-                this.balance = balances[Object.keys(balances)[i]]
-
-            writeFileSync(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' })
-        }
     }
     
-    private getomegas(websocket: WebSocket): Promise<[ string, string ] | undefined>
+    private getOmegas(websocket: WebSocket): Promise<string[] | undefined>
     {
         return new Promise((resolve: any, reject: any): void =>
         {
@@ -524,7 +531,7 @@ export class Wallet
 
             let onMessage: ((message: any) => void) = ((message: any): void =>
             {
-                let omegas: [ string, string ] | undefined
+                let omegas: string[] | undefined
                 let command: Command | undefined = anyToCommand(message)
                 if (command)
                     switch (command.name)

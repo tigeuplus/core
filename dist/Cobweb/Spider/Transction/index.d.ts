@@ -149,4 +149,16 @@ export declare function isTransactionValid(
  * 거래
  */
 transaction: Transaction): boolean;
+/**
+ * 거래 타겟을 검증합니다
+ *
+ * @since v1.0.0-beta
+ * @param transaction 거래
+ * @returns boolean
+ */
+export declare function isTransactionTargetsValid(
+/**
+ * 거래
+ */
+transaction: Transaction): boolean;
 export * from './Transfer';

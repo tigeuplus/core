@@ -249,7 +249,24 @@ export function isTransactionValid(
      */
     transaction: Transaction): boolean
 {
-    return isTransactionHashValid(transaction) && isTransactionNonceValid(transaction) && isTransactionTransfersValid(transaction)
+    return isTransactionHashValid(transaction) && isTransactionNonceValid(transaction) && isTransactionTransfersValid(transaction) && isTransactionTargetsValid(transaction)
+}
+
+/**
+ * 거래 타겟을 검증합니다
+ * 
+ * @since v1.0.0-beta
+ * @param transaction 거래
+ * @returns boolean
+ */
+export function isTransactionTargetsValid(
+    /**
+     * 거래
+     */
+    transaction: Transaction
+): boolean
+{
+    return transaction.targets.length === 2
 }
 
 export * from './Transfer'

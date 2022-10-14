@@ -400,11 +400,10 @@ class Wallet {
         if (repeat)
             for (let i = 0; i < transaction.targets.length; i++) {
                 let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
-                if (spider)
-                    if (!t)
-                        return false;
                 if (t)
                     if (!this.isTransactionValid(t, true, false))
+                        return false;
+                    else if (spider)
                         return false;
             }
         return (0, Cobweb_1.isTransactionValid)(transaction);
@@ -415,23 +414,31 @@ class Wallet {
     }
     async init(websocket, url) {
         let peers = await this.getPeers(websocket);
-        if (!peers)
+        if (peers)
+            await this.addPeer(websocket, url, peers);
+        else
             throw new Error();
-        await this.addPeer(websocket, url, peers);
         let spiders = await this.getSpiders(websocket);
-        if (!spiders)
+        if (spiders)
+            this.cobweb = new Cobweb_1.Cobweb(spiders);
+        else
             throw new Error();
-        this.cobweb = new Cobweb_1.Cobweb(spiders);
+        let omegas = await this.getOmegas(websocket);
+        if (omegas)
+            this.omegas = omegas;
+        else
+            throw new Error();
         let balances = await this.getBalances(websocket);
-        if (!balances)
+        if (balances)
+            for (let i = 0; i < Object.keys(balances).length; i++) {
+                if (Object.keys(balances)[i] === this.address)
+                    this.balance = balances[Object.keys(balances)[i]];
+                (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
+            }
+        else
             throw new Error();
-        for (let i = 0; i < Object.keys(balances).length; i++) {
-            if (Object.keys(balances)[i] === this.address)
-                this.balance = balances[Object.keys(balances)[i]];
-            (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
-        }
     }
-    getomegas(websocket) {
+    getOmegas(websocket) {
         return new Promise((resolve, reject) => {
             let stop = false;
             let timeout = setTimeout(() => {
