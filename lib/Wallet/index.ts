@@ -70,6 +70,10 @@ export class Wallet
      * 타임아웃
      */
     public timeout: number
+    /**
+     * 삭제된 거래
+     */
+    public deleted: string[]
 
     constructor(
         /**
@@ -96,6 +100,7 @@ export class Wallet
         this.balance = 0n
         this.cobweb = new Cobweb()
         this.omegas = []
+        this.deleted = []
 
         mkdirSync(path.join(this.storage, 'wallet'))
         mkdirSync(path.join(this.storage, 'transactions'))
@@ -131,20 +136,47 @@ export class Wallet
 
         scheduleJob('3 * * * * *', async(): Promise<void> =>
         {
+            this.deleted = []
             let spiders: { [ index: string ]: Spider } = anyToSpiders(parse(stringify(this.cobweb.spiders)))!
             for (let i: number = 0; Object.keys(spiders).length; i ++)
                 if (spiders[Object.keys(spiders)[i]].spiders.length >= 100)
                 {
                     for (let j: number = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j ++)
                     {
+                        this.deleted.push(Object.keys(spiders)[i])
+                        setTimeout((): void => 
+                        {
+                            for (let i: number = 0; i < this.deleted.length; i ++)
+                                if (this.deleted[i] === Object.keys(spiders)[i])
+                                    delete this.deleted[i]
+                        }, 60 * 5 * 1000)
+
                         delete this.cobweb.spiders[Object.keys(spiders)[i]]
                         if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0)
+                        {
+                            this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j])
+                            setTimeout((): void =>
+                            {
+                                for (let i: number = 0; i < this.deleted.length; i ++)
+                                    if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
+                                        delete this.deleted[i]
+                            }, 60 * 5 * 1000)
+
                             delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]]
+                        }
                         else
                             for (let k: number = 0; k < spiders[Object.keys(spiders)[i]].spiders.length; k ++)
                                 if (spiders[Object.keys(spiders)[i]].spiders[k] !== spiders[Object.keys(spiders)[i]].spiders[j])
                                     if ((spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length - spiders[spiders[Object.keys(spiders)[i]].spiders[k]].spiders.length) >= 10)
                                     {
+                                        this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j])
+                                        setTimeout((): void =>
+                                        {
+                                            for (let i: number = 0; i < this.deleted.length; i ++)
+                                                if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
+                                                    delete this.deleted[i]
+                                        }, 60 * 5 * 1000)
+
                                         delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]]
                                         break
                                     }
@@ -173,8 +205,16 @@ export class Wallet
 
                     if (save)
                         writeFileSync(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' } )
-
                     
+                    this.deleted.push(Object.keys(spiders)[i])
+                    setTimeout((): void =>
+                    {
+                        
+                        for (let i: number = 0; i < this.deleted.length; i ++)
+                            if (this.deleted[i] === Object.keys(spiders)[i])
+                                delete this.deleted[i]
+                    }, 60 * 5 * 1000)
+
                     delete this.cobweb.spiders[Object.keys(spiders)[i]]
                 }
                         
@@ -231,10 +271,16 @@ export class Wallet
          */
         transfers: Transfer[]): void
     {
-        let transaction: Transaction = new Transaction(transfers[0].from, transfers, this.calculateTargetSpider())
+        let transaction: Transaction = new Transaction(transfers[0].from, transfers, this.calculateTargetSpiders())
         transaction = new Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash)
 
-        this.broadcast(stringify(new Command('Add_Transaction', transaction)))
+        if (this.isTransactionTypeValid(transaction))
+        {
+            this.cobweb.add(transaction)
+            this.omegas = transaction.targets
+            
+            this.broadcast(stringify(new Command('Add_Transaction', transaction)))
+        }
     }
 
     /**
@@ -259,7 +305,7 @@ export class Wallet
      * @since v1.0.0-alpha
      * @returns string[]
      */
-    public calculateTargetSpider(): string[]
+    public calculateTargetSpiders(): string[]
     {
         let hash: string = this.omegas[Math.floor(Math.random() * this.omegas.length)]
         if (!this.cobweb.spiders[hash])
@@ -301,13 +347,12 @@ export class Wallet
             for (let j: number = 0; j < targets.length; j ++)
                 for (;;)
                 {
-                    let k: string | undefined = undefined
+                    let k: string
                     if ((j === 0 && spider.transaction.targets.length !== 0) || (j === 1 && spider.spiders.length === 0))
                         k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)]
-                    else
+                    else if (spider.spiders.length !== 0)
                         k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)]
-
-                    if (!k)
+                    else
                     {
                         targets[j][hash] = (targets[j][hash] || 0) + 1
                         break
@@ -327,49 +372,6 @@ export class Wallet
 
         return results
     }
-
-    // /**
-    //  * 대상 거래를 계산합니다
-    //  * 
-    //  * @since v1.0.0-alpha
-    //  * @returns [ string, string ]
-    //  */
-    // public calculateTargetTransaction(): [ string, string ]
-    // {
-    //     let spiders: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
-    //     for (let i: number = 0; i < 2; i ++)
-    //     {
-    //         let spider: Spider | undefined = this.cobweb.spiders[this.omegas[i]]
-    //         if (spider)
-    //             for (let j: number = 0; j < 100; j ++)
-    //             {
-    //                 for (;;)
-    //                 {
-    //                     let k: number = Math.floor(Math.random() * spider.transaction.targets.length)
-    //                     if (this.cobweb.spiders[spider.spiders[k]])
-    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
-    //                         {
-    //                             spiders[0][spider.spiders[k]] = (spiders[0][spider.spiders[k]] || 0) + 1
-    //                             break
-    //                         }
-    //                 }
-
-    //                 for (;;)
-    //                 {
-    //                     let k: number = Math.floor(Math.random() * spider.spiders.length)
-    //                     if (this.cobweb.spiders[spider.spiders[k]])
-    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
-    //                         {
-    //                             spiders[1][spider.spiders[k]] = (spiders[1][spider.spiders[k]] || 0) + 1
-    //                             break
-    //                         }
-    //                 }
-    //             }
-    //     }
-
-    //     let ascending: [ string[], string[] ] = [ Object.keys(spiders[0]).sort((a: string, b: string) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a: string, b: string) => spiders[1][b] - spiders[1][a])]
-    //     return [ ascending[0][0], ascending[1][0] ]
-    // }
 
     private async onConnection(websocket: WebSocket, request: IncomingMessage): Promise<void>
     {
@@ -457,26 +459,24 @@ export class Wallet
         /**
          * 스파이더 여부
          */
-        spider: boolean = false): boolean
+        spider: boolean = false,
+        /**
+         * 반복
+         */
+        repeat: boolean = true): boolean
     {
-        if (spider)
+        if (repeat)
             for (let i: number = 0; i < transaction.targets.length; i ++)
             {
                 let t: Transaction | undefined = this.cobweb.spiders[transaction.targets[i]]?.transaction
+                if (spider)
+                    if (!t)
+                        return false
+
                 if (t)
-                    if (!this.isTransactionValid(t, true))
+                    if (!this.isTransactionValid(t, true, false))
                         return false
             }
-        else
-            for (let i: number = 0; i < transaction.targets.length; i ++)
-            {
-                let t: Transaction | undefined = this.cobweb.spiders[transaction.targets[i]]?.transaction
-                if (!t)
-                    return false
-                else
-                    if (!this.isTransactionValid(t, true))
-                        return false
-            }  
 
         return isTransactionValid(transaction)
     }

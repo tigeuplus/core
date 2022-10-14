@@ -23,7 +23,7 @@ app.post('/send', (req: express.Request, res: express.Response) =>
             let transfer: Transfer = new Transfer(wallet.address, address, BigInt(value), (memo || ''))
             transfer = new Transfer(transfer.from, address, BigInt(value), transfer.memo, transfer.timestamp, calculateTransferSignature(transfer, wallet.privatekey))
 
-            let transaction: Transaction = new Transaction(transfer.from, [ transfer ], wallet.calculateTargetSpider())
+            let transaction: Transaction = new Transaction(transfer.from, [ transfer ], wallet.calculateTargetSpiders())
             transaction = new Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, calculateTransactionNonce(transaction), calculateTransactionHash(transaction))
 
             wallet.send([ transfer ])

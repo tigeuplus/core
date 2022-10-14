@@ -51,6 +51,10 @@ export declare class Wallet {
      * 타임아웃
      */
     timeout: number;
+    /**
+     * 삭제된 거래
+     */
+    deleted: string[];
     constructor(
     /**
      * 저장 경로
@@ -110,7 +114,7 @@ export declare class Wallet {
      * @since v1.0.0-alpha
      * @returns string[]
      */
-    calculateTargetSpider(): string[];
+    calculateTargetSpiders(): string[];
     private onConnection;
     private onMessage;
     /**
@@ -141,7 +145,11 @@ export declare class Wallet {
     /**
      * 스파이더 여부
      */
-    spider?: boolean): boolean;
+    spider?: boolean, 
+    /**
+     * 반복
+     */
+    repeat?: boolean): boolean;
     private onClose;
     private init;
     private getomegas;

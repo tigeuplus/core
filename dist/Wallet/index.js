@@ -90,6 +90,10 @@ class Wallet {
      * 타임아웃
      */
     timeout;
+    /**
+     * 삭제된 거래
+     */
+    deleted;
     constructor(
     /**
      * 저장 경로
@@ -114,6 +118,7 @@ class Wallet {
         this.balance = 0n;
         this.cobweb = new Cobweb_1.Cobweb();
         this.omegas = [];
+        this.deleted = [];
         (0, fs_1.mkdirSync)(path.join(this.storage, 'wallet'));
         (0, fs_1.mkdirSync)(path.join(this.storage, 'transactions'));
         (0, fs_1.mkdirSync)(path.join(this.storage, 'snapshots'));
@@ -139,17 +144,37 @@ class Wallet {
             this.omegas = [transaction.hash, transaction.hash];
         }
         (0, node_schedule_1.scheduleJob)('3 * * * * *', async () => {
+            this.deleted = [];
             let spiders = (0, Cobweb_1.anyToSpiders)(parse(stringify(this.cobweb.spiders)));
             for (let i = 0; Object.keys(spiders).length; i++)
                 if (spiders[Object.keys(spiders)[i]].spiders.length >= 100) {
                     for (let j = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j++) {
+                        this.deleted.push(Object.keys(spiders)[i]);
+                        setTimeout(() => {
+                            for (let i = 0; i < this.deleted.length; i++)
+                                if (this.deleted[i] === Object.keys(spiders)[i])
+                                    delete this.deleted[i];
+                        }, 60 * 5 * 1000);
                         delete this.cobweb.spiders[Object.keys(spiders)[i]];
-                        if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0)
+                        if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0) {
+                            this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j]);
+                            setTimeout(() => {
+                                for (let i = 0; i < this.deleted.length; i++)
+                                    if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
+                                        delete this.deleted[i];
+                            }, 60 * 5 * 1000);
                             delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
+                        }
                         else
                             for (let k = 0; k < spiders[Object.keys(spiders)[i]].spiders.length; k++)
                                 if (spiders[Object.keys(spiders)[i]].spiders[k] !== spiders[Object.keys(spiders)[i]].spiders[j])
                                     if ((spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length - spiders[spiders[Object.keys(spiders)[i]].spiders[k]].spiders.length) >= 10) {
+                                        this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j]);
+                                        setTimeout(() => {
+                                            for (let i = 0; i < this.deleted.length; i++)
+                                                if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
+                                                    delete this.deleted[i];
+                                        }, 60 * 5 * 1000);
                                         delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
                                         break;
                                     }
@@ -171,6 +196,12 @@ class Wallet {
                     }
                     if (save)
                         (0, fs_1.writeFileSync)(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' });
+                    this.deleted.push(Object.keys(spiders)[i]);
+                    setTimeout(() => {
+                        for (let i = 0; i < this.deleted.length; i++)
+                            if (this.deleted[i] === Object.keys(spiders)[i])
+                                delete this.deleted[i];
+                    }, 60 * 5 * 1000);
                     delete this.cobweb.spiders[Object.keys(spiders)[i]];
                 }
         });
@@ -213,9 +244,13 @@ class Wallet {
      * 전송 데이터
      */
     transfers) {
-        let transaction = new Cobweb_1.Transaction(transfers[0].from, transfers, this.calculateTargetSpider());
+        let transaction = new Cobweb_1.Transaction(transfers[0].from, transfers, this.calculateTargetSpiders());
         transaction = new Cobweb_1.Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash);
-        this.broadcast(stringify(new Command_1.Command('Add_Transaction', transaction)));
+        if (this.isTransactionTypeValid(transaction)) {
+            this.cobweb.add(transaction);
+            this.omegas = transaction.targets;
+            this.broadcast(stringify(new Command_1.Command('Add_Transaction', transaction)));
+        }
     }
     /**
      * 모든 피어에게 데이터를 전송합니다
@@ -237,7 +272,7 @@ class Wallet {
      * @since v1.0.0-alpha
      * @returns string[]
      */
-    calculateTargetSpider() {
+    calculateTargetSpiders() {
         let hash = this.omegas[Math.floor(Math.random() * this.omegas.length)];
         if (!this.cobweb.spiders[hash])
             hash = Object.keys(this.cobweb.spiders)[Math.floor(Math.random() * Object.keys(this.cobweb.spiders).length)];
@@ -268,12 +303,12 @@ class Wallet {
         for (let i = 0; i < 100; i++)
             for (let j = 0; j < targets.length; j++)
                 for (;;) {
-                    let k = undefined;
+                    let k;
                     if ((j === 0 && spider.transaction.targets.length !== 0) || (j === 1 && spider.spiders.length === 0))
                         k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
-                    else
+                    else if (spider.spiders.length !== 0)
                         k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
-                    if (!k) {
+                    else {
                         targets[j][hash] = (targets[j][hash] || 0) + 1;
                         break;
                     }
@@ -288,46 +323,6 @@ class Wallet {
             results.push(Object.keys(targets[i]).sort((a, b) => targets[i][b] - targets[i][a])[0]);
         return results;
     }
-    // /**
-    //  * 대상 거래를 계산합니다
-    //  * 
-    //  * @since v1.0.0-alpha
-    //  * @returns [ string, string ]
-    //  */
-    // public calculateTargetTransaction(): [ string, string ]
-    // {
-    //     let spiders: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
-    //     for (let i: number = 0; i < 2; i ++)
-    //     {
-    //         let spider: Spider | undefined = this.cobweb.spiders[this.omegas[i]]
-    //         if (spider)
-    //             for (let j: number = 0; j < 100; j ++)
-    //             {
-    //                 for (;;)
-    //                 {
-    //                     let k: number = Math.floor(Math.random() * spider.transaction.targets.length)
-    //                     if (this.cobweb.spiders[spider.spiders[k]])
-    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
-    //                         {
-    //                             spiders[0][spider.spiders[k]] = (spiders[0][spider.spiders[k]] || 0) + 1
-    //                             break
-    //                         }
-    //                 }
-    //                 for (;;)
-    //                 {
-    //                     let k: number = Math.floor(Math.random() * spider.spiders.length)
-    //                     if (this.cobweb.spiders[spider.spiders[k]])
-    //                         if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[k]].transaction))
-    //                         {
-    //                             spiders[1][spider.spiders[k]] = (spiders[1][spider.spiders[k]] || 0) + 1
-    //                             break
-    //                         }
-    //                 }
-    //             }
-    //     }
-    //     let ascending: [ string[], string[] ] = [ Object.keys(spiders[0]).sort((a: string, b: string) => spiders[0][b] - spiders[0][a]), Object.keys(spiders[1]).sort((a: string, b: string) => spiders[1][b] - spiders[1][a])]
-    //     return [ ascending[0][0], ascending[1][0] ]
-    // }
     async onConnection(websocket, request) {
         websocket.on('close', () => this.onClose(request.headers.host));
         websocket.on('message', async (data) => this.onMessage(websocket, `ws://${request.headers.host}`, parse(data.toString('utf8'))));
@@ -397,21 +392,20 @@ class Wallet {
     /**
      * 스파이더 여부
      */
-    spider = false) {
-        if (spider)
+    spider = false, 
+    /**
+     * 반복
+     */
+    repeat = true) {
+        if (repeat)
             for (let i = 0; i < transaction.targets.length; i++) {
                 let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
-                if (t)
-                    if (!this.isTransactionValid(t, true))
+                if (spider)
+                    if (!t)
                         return false;
-            }
-        else
-            for (let i = 0; i < transaction.targets.length; i++) {
-                let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
-                if (!t)
-                    return false;
-                else if (!this.isTransactionValid(t, true))
-                    return false;
+                if (t)
+                    if (!this.isTransactionValid(t, true, false))
+                        return false;
             }
         return (0, Cobweb_1.isTransactionValid)(transaction);
     }
