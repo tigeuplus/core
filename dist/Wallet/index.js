@@ -148,54 +148,43 @@ class Wallet {
             let spiders = (0, Cobweb_1.anyToSpiders)(parse(stringify(this.cobweb.spiders)));
             for (let i = 0; Object.keys(spiders).length; i++)
                 if (spiders[Object.keys(spiders)[i]].spiders.length >= 100) {
-                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j++) {
-                        this.deleted.push(Object.keys(spiders)[i]);
-                        setTimeout(() => {
-                            for (let i = 0; i < this.deleted.length; i++)
-                                if (this.deleted[i] === Object.keys(spiders)[i])
-                                    delete this.deleted[i];
-                        }, 60 * 5 * 1000);
-                        delete this.cobweb.spiders[Object.keys(spiders)[i]];
-                        if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0) {
-                            this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j]);
-                            setTimeout(() => {
-                                for (let i = 0; i < this.deleted.length; i++)
-                                    if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
-                                        delete this.deleted[i];
-                            }, 60 * 5 * 1000);
-                            delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
+                    let sum = 0;
+                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j++)
+                        if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]])
+                            sum += spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length;
+                    if (sum >= 200) {
+                        for (let j = 0; j < spiders[Object.keys(spiders)[i]].spiders.length; j++)
+                            if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]])
+                                for (let k = 0; spiders[spiders[Object.keys(spiders)[i]].spiders[j]].transaction.targets.length; k++)
+                                    if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].transaction.targets[k] !== Object.keys(spiders)[j])
+                                        if (!spiders[spiders[spiders[Object.keys(spiders)[i]].spiders[j]].transaction.targets[k]])
+                                            if (spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length === 0) {
+                                                this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j]);
+                                                setTimeout(() => {
+                                                    for (let i = 0; i < this.deleted.length; i++)
+                                                        if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
+                                                            delete this.deleted[i];
+                                                }, 60 * 5 * 1000);
+                                                delete spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
+                                            }
+                        let save = false;
+                        for (let j = 0; j < spiders[Object.keys(spiders)[i]].transaction.transfers.length; j++) {
+                            let from = spiders[Object.keys(spiders)[i]].transaction.transfers[j].from;
+                            let to = spiders[Object.keys(spiders)[i]].transaction.transfers[j].to;
+                            let balanceOfFrom = this.getBalance(from);
+                            let balanceOfTo = this.getBalance(to);
+                            let value = spiders[Object.keys(spiders)[i]].transaction.transfers[j].value;
+                            if ((balanceOfFrom - value) === 0n)
+                                this.deleteBalance(from);
+                            else
+                                this.saveBalance(from, (balanceOfFrom - value));
+                            this.saveBalance(to, (balanceOfTo + value));
+                            if (from === this.address || to === this.address)
+                                save = true;
                         }
-                        else
-                            for (let k = 0; k < spiders[Object.keys(spiders)[i]].spiders.length; k++)
-                                if (spiders[Object.keys(spiders)[i]].spiders[k] !== spiders[Object.keys(spiders)[i]].spiders[j])
-                                    if ((spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length - spiders[spiders[Object.keys(spiders)[i]].spiders[k]].spiders.length) >= 10) {
-                                        this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j]);
-                                        setTimeout(() => {
-                                            for (let i = 0; i < this.deleted.length; i++)
-                                                if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
-                                                    delete this.deleted[i];
-                                        }, 60 * 5 * 1000);
-                                        delete this.cobweb.spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
-                                        break;
-                                    }
+                        if (save)
+                            (0, fs_1.writeFileSync)(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' });
                     }
-                    let save = false;
-                    for (let j = 0; j < spiders[Object.keys(spiders)[i]].transaction.transfers.length; j++) {
-                        let from = spiders[Object.keys(spiders)[i]].transaction.transfers[j].from;
-                        let to = spiders[Object.keys(spiders)[i]].transaction.transfers[j].to;
-                        let balanceOfFrom = this.getBalance(from);
-                        let balanceOfTo = this.getBalance(to);
-                        let value = spiders[Object.keys(spiders)[i]].transaction.transfers[j].value;
-                        if ((balanceOfFrom - value) === 0n)
-                            this.deleteBalance(from);
-                        else
-                            this.saveBalance(from, (balanceOfFrom - value));
-                        this.saveBalance(to, (balanceOfTo + value));
-                        if (from === this.address || to === this.address)
-                            save = true;
-                    }
-                    if (save)
-                        (0, fs_1.writeFileSync)(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' });
                     this.deleted.push(Object.keys(spiders)[i]);
                     setTimeout(() => {
                         for (let i = 0; i < this.deleted.length; i++)
@@ -359,6 +348,8 @@ class Wallet {
                     break;
                 case 'Get_omegas':
                     return websocket.send(stringify(new Command_1.Command('Get_omegas_Result', this.omegas)));
+                case 'Get_Deleted':
+                    return websocket.send(stringify(new Command_1.Command('Get_Deleted_Result', this.deleted)));
             }
     }
     /**
@@ -430,6 +421,11 @@ class Wallet {
             this.omegas = omegas;
         else
             throw new Error();
+        let deleted = await this.getDeleted(websocket);
+        if (deleted)
+            this.deleted = deleted;
+        else
+            throw new Error();
         let balances = await this.getBalances(websocket);
         if (balances)
             for (let i = 0; i < Object.keys(balances).length; i++) {
@@ -439,6 +435,40 @@ class Wallet {
             }
         else
             throw new Error();
+    }
+    getDeleted(websocket) {
+        return new Promise((resolve, reject) => {
+            let stop = false;
+            let timeout = setTimeout(() => {
+                stop = true;
+            }, this.timeout);
+            let onMessage = ((message) => {
+                let deleted;
+                let command = (0, Command_1.anyToCommand)(message);
+                if (command)
+                    switch (command.name) {
+                        case 'Get_omegas_Result':
+                            if (command.data instanceof Array) {
+                                let succes = true;
+                                for (let i = 0; i < command.data.length; i++)
+                                    if (typeof command.data[i] !== 'string') {
+                                        succes = false;
+                                        break;
+                                    }
+                                if (succes)
+                                    deleted = command.data;
+                            }
+                            break;
+                    }
+                if (stop)
+                    return resolve();
+                if (deleted)
+                    return resolve(deleted);
+                websocket.once('message', onMessage);
+            });
+            websocket.once('message', onMessage);
+            websocket.send(stringify(new Command_1.Command('Get_Deleted')));
+        });
     }
     getOmegas(websocket) {
         return new Promise((resolve, reject) => {
@@ -463,6 +493,7 @@ class Wallet {
                                     if (succes)
                                         omegas = [command.data[0], command.data[1]];
                                 }
+                            break;
                     }
                 if (stop)
                     return resolve();
