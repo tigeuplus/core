@@ -473,7 +473,7 @@ export class Wallet
                     if (!this.isTransactionValid(t, true, false))
                         return false
                 else
-                    if (spider)
+                    if (!spider)
                         return false
             }
 

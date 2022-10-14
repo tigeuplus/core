@@ -403,7 +403,7 @@ class Wallet {
                 if (t)
                     if (!this.isTransactionValid(t, true, false))
                         return false;
-                    else if (spider)
+                    else if (!spider)
                         return false;
             }
         return (0, Cobweb_1.isTransactionValid)(transaction);
