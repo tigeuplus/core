@@ -300,7 +300,7 @@ export class Wallet
         let targets: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
         for (;;)
         {
-            if (this.isTransactionValid(spider.transaction))
+            if (this.isTransactionValid(spider.transaction, true))
             {
                 let valid: boolean = false
                 for (let i: number = 0; i < spider.transaction.targets.length; i ++)

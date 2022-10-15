@@ -268,7 +268,7 @@ class Wallet {
         let spider = this.cobweb.spiders[hash];
         let targets = [{}, {}];
         for (;;) {
-            if (this.isTransactionValid(spider.transaction)) {
+            if (this.isTransactionValid(spider.transaction, true)) {
                 let valid = false;
                 for (let i = 0; i < spider.transaction.targets.length; i++)
                     if (this.cobweb.spiders[spider.transaction.targets[i]])
