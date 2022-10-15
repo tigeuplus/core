@@ -259,7 +259,7 @@ export class Wallet
         let transaction: Transaction = new Transaction(transfers[0].from, transfers, this.calculateTargetSpiders())
         transaction = new Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash)
 
-        if (this.isTransactionTypeValid(transaction))
+        if (this.isTransactionValid(transaction))
         {
             this.cobweb.add(transaction)
             this.omegas = transaction.targets
@@ -399,7 +399,7 @@ export class Wallet
                 case 'Add_Transaction':
                     let transaction: Transaction | undefined = anyToTransaction(command.data)
                     if (transaction)
-                        if (this.isTransactionTypeValid(transaction))
+                        if (this.isTransactionValid(transaction))
                         {
                             this.cobweb.add(transaction)
                             this.omegas = transaction.targets
@@ -422,16 +422,18 @@ export class Wallet
      * @param transaction 거래
      * @returns boolean
      */
-    public isTransactionTypeValid(
+    public isTransactionValid(
         /**
          * 거래
          */
         transaction: Transaction): boolean
     {
+        let deleted: string[] = parse(stringify(this.deleted))
         for (let i: number = 0; i < transaction.targets.length; i ++)
             if (!this.cobweb.spiders[transaction.targets[i]])
-                return false
-    
+                if (!deleted.find((s: string) => s === transaction.targets[i]))
+                    return false
+
         return isTransactionValid(transaction)
     }
 

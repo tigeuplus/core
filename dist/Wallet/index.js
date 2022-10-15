@@ -235,7 +235,7 @@ class Wallet {
     transfers) {
         let transaction = new Cobweb_1.Transaction(transfers[0].from, transfers, this.calculateTargetSpiders());
         transaction = new Cobweb_1.Transaction(transaction.author, transaction.transfers, transaction.targets, transaction.timestamp, transaction.nonce, transaction.hash);
-        if (this.isTransactionTypeValid(transaction)) {
+        if (this.isTransactionValid(transaction)) {
             this.cobweb.add(transaction);
             this.omegas = transaction.targets;
             this.broadcast(stringify(new Command_1.Command('Add_Transaction', transaction)));
@@ -341,7 +341,7 @@ class Wallet {
                 case 'Add_Transaction':
                     let transaction = (0, Cobweb_1.anyToTransaction)(command.data);
                     if (transaction)
-                        if (this.isTransactionTypeValid(transaction)) {
+                        if (this.isTransactionValid(transaction)) {
                             this.cobweb.add(transaction);
                             this.omegas = transaction.targets;
                         }
@@ -359,14 +359,16 @@ class Wallet {
      * @param transaction 거래
      * @returns boolean
      */
-    isTransactionTypeValid(
+    isTransactionValid(
     /**
      * 거래
      */
     transaction) {
+        let deleted = parse(stringify(this.deleted));
         for (let i = 0; i < transaction.targets.length; i++)
             if (!this.cobweb.spiders[transaction.targets[i]])
-                return false;
+                if (!deleted.find((s) => s === transaction.targets[i]))
+                    return false;
         return (0, Cobweb_1.isTransactionValid)(transaction);
     }
     /**

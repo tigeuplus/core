@@ -124,7 +124,7 @@ export declare class Wallet {
      * @param transaction 거래
      * @returns boolean
      */
-    isTransactionTypeValid(
+    isTransactionValid(
     /**
      * 거래
      */
