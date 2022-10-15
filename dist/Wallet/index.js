@@ -294,12 +294,12 @@ class Wallet {
         for (let i = 0; i < 100; i++)
             for (let j = 0; j < targets.length; j++)
                 for (;;) {
-                    let k;
+                    let k = undefined;
                     if ((j === 0 && spider.transaction.targets.length !== 0) || (j === 1 && spider.spiders.length === 0))
                         k = spider.transaction.targets[Math.floor(Math.random() * spider.transaction.targets.length)];
-                    else if (spider.spiders.length !== 0)
+                    else
                         k = spider.spiders[Math.floor(Math.random() * spider.spiders.length)];
-                    else {
+                    if (!k) {
                         targets[j][hash] = (targets[j][hash] || 0) + 1;
                         break;
                     }
