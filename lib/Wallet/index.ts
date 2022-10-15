@@ -300,12 +300,12 @@ export class Wallet
         let targets: [ { [ index: string ]: number }, { [ index: string ]: number } ] = [ {}, {} ]
         for (;;)
         {
-            if (this.isTransactionValid(spider.transaction, true))
+            if (this.isSpiderValid(spider))
             {
                 let valid: boolean = false
                 for (let i: number = 0; i < spider.transaction.targets.length; i ++)
                     if (this.cobweb.spiders[spider.transaction.targets[i]])
-                        if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true))
+                        if (this.isSpiderValid(this.cobweb.spiders[spider.transaction.targets[i]]))
                         {
                             valid = true
                             break
@@ -316,7 +316,7 @@ export class Wallet
                     valid = false
                     for (let i: number = 0; i < spider.spiders.length; i ++)
                         if (this.cobweb.spiders[spider.spiders[i]])
-                            if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true))
+                            if (this.isSpiderValid(this.cobweb.spiders[spider.spiders[i]]))
                             {
                                 valid = true
                                 break
@@ -348,7 +348,7 @@ export class Wallet
                     }
 
                     if (this.cobweb.spiders[k])
-                        if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true))
+                        if (this.isSpiderValid(this.cobweb.spiders[k]))
                         {
                             targets[j][k] = (targets[j][k] || 0) + 1
                             break
@@ -438,38 +438,26 @@ export class Wallet
     /**
      * 거래를 검증합니다
      * 
-     * @since v1.0.0-alpha.2
-     * @param transaction 거래
-     * @param spider 기존 스파이더 여부
+     * @since v1.0.0-alpha
+     * @param transaction 스파이더
+     * @param repeat 반복
      * @returns boolean
      */
-    public isTransactionValid(
+    public isSpiderValid(
         /**
-         * 거래
+         * 스파이더
          */
-        transaction: Transaction, 
-        /**
-         * 스파이더 여부
-         */
-        spider: boolean = false,
-        /**
-         * 반복
-         */
-        repeat: boolean = true): boolean
+        spider: Spider): boolean
     {
-        if (repeat)
-            for (let i: number = 0; i < transaction.targets.length; i ++)
-            {
-                let t: Transaction | undefined = this.cobweb.spiders[transaction.targets[i]]?.transaction
-                if (t)
-                    if (!this.isTransactionValid(t, true, false))
-                        return false
-                else
-                    if (!spider)
-                        return false
-            }
+        for (let i: number = 0; i < spider.transaction.targets.length; i ++)
+        {
+            let s: Spider | undefined = this.cobweb.spiders[spider.transaction.targets[i]]
+            if (s)
+                if (isTransactionValid(s.transaction))
+                    return false
+        }
 
-        return isTransactionValid(transaction)
+        return isTransactionValid(spider.transaction)
     }
 
     private onClose(url: string): void

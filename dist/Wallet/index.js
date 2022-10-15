@@ -268,11 +268,11 @@ class Wallet {
         let spider = this.cobweb.spiders[hash];
         let targets = [{}, {}];
         for (;;) {
-            if (this.isTransactionValid(spider.transaction, true)) {
+            if (this.isSpiderValid(spider)) {
                 let valid = false;
                 for (let i = 0; i < spider.transaction.targets.length; i++)
                     if (this.cobweb.spiders[spider.transaction.targets[i]])
-                        if (this.isTransactionValid(this.cobweb.spiders[spider.transaction.targets[i]].transaction, true)) {
+                        if (this.isSpiderValid(this.cobweb.spiders[spider.transaction.targets[i]])) {
                             valid = true;
                             break;
                         }
@@ -280,7 +280,7 @@ class Wallet {
                     valid = false;
                     for (let i = 0; i < spider.spiders.length; i++)
                         if (this.cobweb.spiders[spider.spiders[i]])
-                            if (this.isTransactionValid(this.cobweb.spiders[spider.spiders[i]].transaction, true)) {
+                            if (this.isSpiderValid(this.cobweb.spiders[spider.spiders[i]])) {
                                 valid = true;
                                 break;
                             }
@@ -304,7 +304,7 @@ class Wallet {
                         break;
                     }
                     if (this.cobweb.spiders[k])
-                        if (this.isTransactionValid(this.cobweb.spiders[k].transaction, true)) {
+                        if (this.isSpiderValid(this.cobweb.spiders[k])) {
                             targets[j][k] = (targets[j][k] || 0) + 1;
                             break;
                         }
@@ -372,34 +372,23 @@ class Wallet {
     /**
      * 거래를 검증합니다
      *
-     * @since v1.0.0-alpha.2
-     * @param transaction 거래
-     * @param spider 기존 스파이더 여부
+     * @since v1.0.0-alpha
+     * @param transaction 스파이더
+     * @param repeat 반복
      * @returns boolean
      */
-    isTransactionValid(
+    isSpiderValid(
     /**
-     * 거래
+     * 스파이더
      */
-    transaction, 
-    /**
-     * 스파이더 여부
-     */
-    spider = false, 
-    /**
-     * 반복
-     */
-    repeat = true) {
-        if (repeat)
-            for (let i = 0; i < transaction.targets.length; i++) {
-                let t = this.cobweb.spiders[transaction.targets[i]]?.transaction;
-                if (t)
-                    if (!this.isTransactionValid(t, true, false))
-                        return false;
-                    else if (!spider)
-                        return false;
-            }
-        return (0, Cobweb_1.isTransactionValid)(transaction);
+    spider) {
+        for (let i = 0; i < spider.transaction.targets.length; i++) {
+            let s = this.cobweb.spiders[spider.transaction.targets[i]];
+            if (s)
+                if ((0, Cobweb_1.isTransactionValid)(s.transaction))
+                    return false;
+        }
+        return (0, Cobweb_1.isTransactionValid)(spider.transaction);
     }
     onClose(url) {
         if (this.peers[url])

@@ -1,4 +1,4 @@
-import { Cobweb, Transaction, Transfer } from '../Cobweb';
+import { Cobweb, Transaction, Spider, Transfer } from '../Cobweb';
 import { WebSocketServer, WebSocket } from 'ws';
 /**
  * 지갑
@@ -132,24 +132,16 @@ export declare class Wallet {
     /**
      * 거래를 검증합니다
      *
-     * @since v1.0.0-alpha.2
-     * @param transaction 거래
-     * @param spider 기존 스파이더 여부
+     * @since v1.0.0-alpha
+     * @param transaction 스파이더
+     * @param repeat 반복
      * @returns boolean
      */
-    isTransactionValid(
+    isSpiderValid(
     /**
-     * 거래
+     * 스파이더
      */
-    transaction: Transaction, 
-    /**
-     * 스파이더 여부
-     */
-    spider?: boolean, 
-    /**
-     * 반복
-     */
-    repeat?: boolean): boolean;
+    spider: Spider): boolean;
     private onClose;
     private init;
     private getDeleted;
