@@ -167,6 +167,19 @@ class Wallet {
                                                 }, 60 * 5 * 1000);
                                                 delete spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
                                             }
+                                            else
+                                                for (let l = 0; l < spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length; l++)
+                                                    if (spiders[spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders[l]])
+                                                        if (spiders[spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders[l]].spiders.length >= spiders[spiders[Object.keys(spiders)[i]].spiders[j]].spiders.length) {
+                                                            this.deleted.push(spiders[Object.keys(spiders)[i]].spiders[j]);
+                                                            setTimeout(() => {
+                                                                for (let i = 0; i < this.deleted.length; i++)
+                                                                    if (this.deleted[i] === spiders[Object.keys(spiders)[i]].spiders[j])
+                                                                        delete this.deleted[i];
+                                                            }, 60 * 5 * 1000);
+                                                            delete spiders[spiders[Object.keys(spiders)[i]].spiders[j]];
+                                                            break;
+                                                        }
                         let save = false;
                         for (let j = 0; j < spiders[Object.keys(spiders)[i]].transaction.transfers.length; j++) {
                             let from = spiders[Object.keys(spiders)[i]].transaction.transfers[j].from;
