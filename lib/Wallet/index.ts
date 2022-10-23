@@ -458,6 +458,13 @@ export class Wallet
                 if (!deleted.find((s: string) => s === transaction.targets[i]))
                     return false
 
+        let value: bigint = 0n
+        for (let i: number = 0; i < transaction.transfers.length; i ++)
+            value += transaction.transfers[i].value
+
+        if (value > this.getBalance(transaction.author))
+            return false
+
         return isTransactionValid(transaction)
     }
 
@@ -482,6 +489,13 @@ export class Wallet
                 if (isTransactionValid(s.transaction))
                     return false
         }
+        
+        let value: bigint = 0n
+        for (let i: number = 0; i < spider.transaction.transfers.length; i ++)
+            value += spider.transaction.transfers[i].value
+
+        if (value > this.getBalance(spider.transaction.author))
+            return false
 
         return isTransactionValid(spider.transaction)
     }

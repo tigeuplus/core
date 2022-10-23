@@ -385,6 +385,11 @@ class Wallet {
             if (!this.cobweb.spiders[transaction.targets[i]])
                 if (!deleted.find((s) => s === transaction.targets[i]))
                     return false;
+        let value = 0n;
+        for (let i = 0; i < transaction.transfers.length; i++)
+            value += transaction.transfers[i].value;
+        if (value > this.getBalance(transaction.author))
+            return false;
         return (0, Cobweb_1.isTransactionValid)(transaction);
     }
     /**
@@ -406,6 +411,11 @@ class Wallet {
                 if ((0, Cobweb_1.isTransactionValid)(s.transaction))
                     return false;
         }
+        let value = 0n;
+        for (let i = 0; i < spider.transaction.transfers.length; i++)
+            value += spider.transaction.transfers[i].value;
+        if (value > this.getBalance(spider.transaction.author))
+            return false;
         return (0, Cobweb_1.isTransactionValid)(spider.transaction);
     }
     onClose(url) {
