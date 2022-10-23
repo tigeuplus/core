@@ -102,9 +102,16 @@ export class Wallet
         this.omegas = []
         this.deleted = []
 
-        mkdirSync(path.join(this.storage, 'wallet'))
-        mkdirSync(path.join(this.storage, 'transactions'))
-        mkdirSync(path.join(this.storage, 'snapshots'))
+        if (!existsSync(path.join(this.storage, 'wallet')))
+            mkdirSync(path.join(this.storage, 'wallet'))
+        
+            
+        if (!existsSync(path.join(this.storage, 'transactions')))
+            mkdirSync(path.join(this.storage, 'transactions'))
+            
+        if (!existsSync(path.join(this.storage, 'snapshots')))
+            mkdirSync(path.join(this.storage, 'snapshots'))
+        
         if (existsSync(path.join(this.storage, 'wallet', '.key')))
         {
             this.privatekey = readFileSync(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' })

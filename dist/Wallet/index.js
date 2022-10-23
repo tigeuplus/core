@@ -119,9 +119,12 @@ class Wallet {
         this.cobweb = new Cobweb_1.Cobweb();
         this.omegas = [];
         this.deleted = [];
-        (0, fs_1.mkdirSync)(path.join(this.storage, 'wallet'));
-        (0, fs_1.mkdirSync)(path.join(this.storage, 'transactions'));
-        (0, fs_1.mkdirSync)(path.join(this.storage, 'snapshots'));
+        if (!(0, fs_1.existsSync)(path.join(this.storage, 'wallet')))
+            (0, fs_1.mkdirSync)(path.join(this.storage, 'wallet'));
+        if (!(0, fs_1.existsSync)(path.join(this.storage, 'transactions')))
+            (0, fs_1.mkdirSync)(path.join(this.storage, 'transactions'));
+        if (!(0, fs_1.existsSync)(path.join(this.storage, 'snapshots')))
+            (0, fs_1.mkdirSync)(path.join(this.storage, 'snapshots'));
         if ((0, fs_1.existsSync)(path.join(this.storage, 'wallet', '.key'))) {
             this.privatekey = (0, fs_1.readFileSync)(path.join(this.storage, 'wallet', '.key'), { encoding: 'utf8' });
             this.address = new elliptic_1.ec('secp256k1').keyFromPrivate(this.privatekey, 'hex').getPublic('hex');
