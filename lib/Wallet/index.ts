@@ -234,7 +234,8 @@ export class Wallet
     {
         try
         {
-            unlinkSync(path.join(this.storage, 'snapshots', `${address}.json`))
+            if (existsSync(path.join(this.storage, 'snapshots', `${address}.json`)))
+                unlinkSync(path.join(this.storage, 'snapshots', `${address}.json`))
         }
         catch (error: any)
         {}
@@ -260,7 +261,8 @@ export class Wallet
     {
         try
         {
-            return parse(stringify(readFileSync(path.join(this.storage, 'snapshots', `${address}.json`), { encoding: 'utf8' })))
+            if (existsSync(path.join(this.storage, 'snapshots', `${address}.json`)))
+                return parse(stringify(readFileSync(path.join(this.storage, 'snapshots', `${address}.json`), { encoding: 'utf8' })))
         }
         catch (erro: any)
         {}

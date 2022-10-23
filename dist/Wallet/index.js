@@ -213,7 +213,8 @@ class Wallet {
     }
     deleteBalance(address) {
         try {
-            (0, fs_1.unlinkSync)(path.join(this.storage, 'snapshots', `${address}.json`));
+            if ((0, fs_1.existsSync)(path.join(this.storage, 'snapshots', `${address}.json`)))
+                (0, fs_1.unlinkSync)(path.join(this.storage, 'snapshots', `${address}.json`));
         }
         catch (error) { }
     }
@@ -233,7 +234,8 @@ class Wallet {
      */
     address) {
         try {
-            return parse(stringify((0, fs_1.readFileSync)(path.join(this.storage, 'snapshots', `${address}.json`), { encoding: 'utf8' })));
+            if ((0, fs_1.existsSync)(path.join(this.storage, 'snapshots', `${address}.json`)))
+                return parse(stringify((0, fs_1.readFileSync)(path.join(this.storage, 'snapshots', `${address}.json`), { encoding: 'utf8' })));
         }
         catch (erro) { }
         return 0n;
