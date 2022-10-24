@@ -150,7 +150,7 @@ export declare function isTransactionValid(
  */
 transaction: Transaction): boolean;
 /**
- * 거래 타겟을 검증합니다
+ * 거래 타겟 수을 검증합니다
  *
  * @since v1.0.0-beta
  * @param transaction 거래

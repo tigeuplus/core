@@ -106,6 +106,18 @@ export declare function isTransferSignatureValid(
  */
 transfer: Transfer): boolean;
 /**
+ * 전송 데이터의 수량이 양수인지 확인합니다.
+ *
+ * @since v1.0.0-beta
+ * @param transfer 전송 데이터
+ * @returns boolean
+ */
+export declare function isTransfersValueValid(
+/**
+ * 전송 데이터
+ */
+transfer: Transfer): boolean;
+/**
  * 전송 데이터가 올바른지 확인합니다
  *
  * @since v1.0.0-alpha

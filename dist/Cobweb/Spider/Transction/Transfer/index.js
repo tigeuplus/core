@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isTransferValid = exports.isTransferSignatureValid = exports.anyToTransfer = exports.isTransferTypeValid = exports.calculateTransferSignature = exports.Transfer = void 0;
+exports.isTransferValid = exports.isTransfersValueValid = exports.isTransferSignatureValid = exports.anyToTransfer = exports.isTransferTypeValid = exports.calculateTransferSignature = exports.Transfer = void 0;
 const elliptic_1 = require("elliptic");
 function stringify(data) {
     return JSON.stringify(data, (key, value) => typeof value === 'bigint' ? `${value.toString()}n` : value);
@@ -142,6 +142,21 @@ transfer) {
 }
 exports.isTransferSignatureValid = isTransferSignatureValid;
 /**
+ * 전송 데이터의 수량이 양수인지 확인합니다.
+ *
+ * @since v1.0.0-beta
+ * @param transfer 전송 데이터
+ * @returns boolean
+ */
+function isTransfersValueValid(
+/**
+ * 전송 데이터
+ */
+transfer) {
+    return transfer.value > 0n;
+}
+exports.isTransfersValueValid = isTransfersValueValid;
+/**
  * 전송 데이터가 올바른지 확인합니다
  *
  * @since v1.0.0-alpha
@@ -153,9 +168,7 @@ function isTransferValid(
  * 전송 데이터
  */
 transfer) {
-    if (isTransferSignatureValid(transfer))
-        return true;
-    return false;
+    return isTransferTypeValid(transfer) && isTransferSignatureValid(transfer) && isTransfersValueValid(transfer);
 }
 exports.isTransferValid = isTransferValid;
 //# sourceMappingURL=index.js.map
