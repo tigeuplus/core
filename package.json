@@ -1,6 +1,6 @@
 {
     "name": "@tigeuplus/core",
-    "version": "v1.0.0-beta.24",
+    "version": "v1.0.0",
     "description": "장소, 성능 상관없이",
     "main": "dist/index.js",
     "private": false,
@@ -15,8 +15,9 @@
     "author": "cobeol <cobeol0111@gmail.com>",
     "license": "MIT",
     "dependencies": {
+        "@tigeuplus/class": "^1.0.0",
+        "@tigeuplus/utility": "^1.0.0",
         "elliptic": "^6.5.4",
-        "hex-to-binary": "^1.0.1",
         "moment-timezone": "^0.5.37",
         "node-schedule": "^2.1.0",
         "ws": "^8.8.1"
