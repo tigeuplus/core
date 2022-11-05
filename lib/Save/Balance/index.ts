@@ -24,5 +24,5 @@ export function saveBalance(
      */
     storage: string): void
 {
-    writeFileSync(path.join(storage, 'balances', `${address}.json`), new Json().stringify(balance), { encoding: 'utf8' })
+    writeFileSync(path.join(storage, 'balances', `${address}.json`), Json.stringify(balance), { encoding: 'utf8' })
 }

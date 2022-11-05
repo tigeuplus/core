@@ -46,7 +46,7 @@ address,
 storage) {
     try {
         if ((0, fs_1.existsSync)(path.join(storage, 'balances', `${address}.json`)))
-            return new utility_1.Json().parse(new utility_1.Json().stringify((0, fs_1.readFileSync)(path.join(storage, 'balances', `${address}.json`), { encoding: 'utf8' })));
+            return utility_1.Json.parse(utility_1.Json.stringify((0, fs_1.readFileSync)(path.join(storage, 'balances', `${address}.json`), { encoding: 'utf8' })));
     }
     catch (erro) { }
     return 0n;

@@ -64,6 +64,6 @@ export function getNodes(
         })
 
         node.once('message', onMessage)
-        node.send(new Json().stringify(new Command('Get_nodes')))
+        node.send(Json.stringify(new Command('Get_nodes')))
     })
 }

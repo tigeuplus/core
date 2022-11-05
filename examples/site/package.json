@@ -1,6 +1,6 @@
 {
     "name": "site",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "",
     "main": "index.ts",
     "scripts": {
@@ -10,7 +10,8 @@
     "author": "cobeol <cobeol0111@gmail.com>",
     "license": "ISC",
     "dependencies": {
-        "@tigeuplus/core": "^1.0.0",
+        "@tigeuplus/core": "^1.0.1",
+        "@tigeuplus/class": "^1.0.1",
         "express": "^4.18.2"
     },
     "devDependencies": {

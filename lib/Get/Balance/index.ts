@@ -23,7 +23,7 @@ export function getBalance(
     try
     {
         if (existsSync(path.join(storage, 'balances', `${address}.json`)))
-            return new Json().parse(new Json().stringify(readFileSync(path.join(storage, 'balances', `${address}.json`), { encoding: 'utf8' })))
+            return Json.parse(Json.stringify(readFileSync(path.join(storage, 'balances', `${address}.json`), { encoding: 'utf8' })))
     }
     catch (erro: any)
     {}

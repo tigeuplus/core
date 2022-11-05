@@ -63,6 +63,6 @@ export function getDeleted(
         })
 
         node.once('message', onMessage)
-        node.send(new Json().stringify(new Command('Get_Deleted')))
+        node.send(Json.stringify(new Command('Get_Deleted')))
     })
 }

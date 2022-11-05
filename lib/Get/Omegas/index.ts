@@ -64,6 +64,6 @@ export function getOmegas(
         })
 
         node.once('message', onMessage)
-        node.send(new Json().stringify(new Command('Get_omegas')))
+        node.send(Json.stringify(new Command('Get_omegas')))
     })
 }

@@ -138,7 +138,7 @@ class Node {
         }
         (0, node_schedule_1.scheduleJob)('3 * * * * *', async () => {
             this.deleted = [];
-            let spiders = (0, class_1.anyToSpiders)(new utility_1.Json().parse(new utility_1.Json().stringify(this.cobweb.spiders)));
+            let spiders = (0, class_1.anyToSpiders)(utility_1.Json.parse(utility_1.Json.stringify(this.cobweb.spiders)));
             for (let i = 0; Object.keys(spiders).length; i++)
                 if (spiders[Object.keys(spiders)[i]].spiders.length >= 100) {
                     let sum = 0;
@@ -189,7 +189,7 @@ class Node {
                                 save = true;
                         }
                         if (save)
-                            (0, fs_1.writeFileSync)(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), new utility_1.Json().stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' });
+                            (0, fs_1.writeFileSync)(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), utility_1.Json.stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' });
                     }
                     this.deleted.push(Object.keys(spiders)[i]);
                     setTimeout(() => {
@@ -217,7 +217,7 @@ class Node {
         if (this.isTransactionValid(transaction)) {
             this.cobweb.add(transaction);
             this.omegas = transaction.targets;
-            this.broadcast(new utility_1.Json().stringify(new class_1.Command('Add_Transaction', transaction)));
+            this.broadcast(utility_1.Json.stringify(new class_1.Command('Add_Transaction', transaction)));
         }
     }
     /**
@@ -295,7 +295,7 @@ class Node {
     }
     async onConnection(websocket, request) {
         websocket.on('close', () => this.onClose(request.headers.host));
-        websocket.on('message', async (data) => this.onMessage(websocket, `ws://${request.headers.host}`, new utility_1.Json().parse(data.toString('utf8'))));
+        websocket.on('message', async (data) => this.onMessage(websocket, `ws://${request.headers.host}`, utility_1.Json.parse(data.toString('utf8'))));
     }
     async onMessage(websocket, url, data) {
         let command = (0, class_1.anyToCommand)(data);
@@ -310,13 +310,13 @@ class Node {
                     let peers = {};
                     for (let i = 0; i < Object.keys(this.peers).length; i++)
                         peers[Object.keys(this.peers)[i]] = this.peers[Object.keys(this.peers)[i]].address;
-                    return websocket.send(new utility_1.Json().stringify(new class_1.Command('Get_Peers_Result', peers)));
+                    return websocket.send(utility_1.Json.stringify(new class_1.Command('Get_Peers_Result', peers)));
                 case 'Get_Balances':
                     let balances = {};
                     let files = (0, fs_1.readdirSync)(path.join(this.storage, 'balances'));
                     for (let i = 0; i < files.length; i++)
-                        balances[files[i].split('.')[0]] = new utility_1.Json().parse((0, fs_1.readFileSync)(path.join(this.storage, 'balances', files[i]), { encoding: 'utf8' }));
-                    return websocket.send(new utility_1.Json().stringify(new class_1.Command('Get_Balances_Result', balances)));
+                        balances[files[i].split('.')[0]] = utility_1.Json.parse((0, fs_1.readFileSync)(path.join(this.storage, 'balances', files[i]), { encoding: 'utf8' }));
+                    return websocket.send(utility_1.Json.stringify(new class_1.Command('Get_Balances_Result', balances)));
                 case 'Add_Transaction':
                     let transaction = (0, class_1.anyToTransaction)(command.data);
                     if (transaction)
@@ -326,9 +326,9 @@ class Node {
                         }
                     break;
                 case 'Get_omegas':
-                    return websocket.send(new utility_1.Json().stringify(new class_1.Command('Get_omegas_Result', this.omegas)));
+                    return websocket.send(utility_1.Json.stringify(new class_1.Command('Get_omegas_Result', this.omegas)));
                 case 'Get_Deleted':
-                    return websocket.send(new utility_1.Json().stringify(new class_1.Command('Get_Deleted_Result', this.deleted)));
+                    return websocket.send(utility_1.Json.stringify(new class_1.Command('Get_Deleted_Result', this.deleted)));
             }
     }
     /**
@@ -343,7 +343,7 @@ class Node {
      * 거래
      */
     transaction) {
-        let deleted = new utility_1.Json().parse(new utility_1.Json().stringify(this.deleted));
+        let deleted = utility_1.Json.parse(utility_1.Json.stringify(this.deleted));
         for (let i = 0; i < transaction.targets.length; i++)
             if (!this.cobweb.spiders[transaction.targets[i]])
                 if (!deleted.find((s) => s === transaction.targets[i]))
@@ -411,7 +411,7 @@ class Node {
             for (let i = 0; i < Object.keys(balances).length; i++) {
                 if (Object.keys(balances)[i] === this.address)
                     this.balance = balances[Object.keys(balances)[i]];
-                (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), new utility_1.Json().stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
+                (0, fs_1.writeFileSync)(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), utility_1.Json.stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' });
             }
         else
             throw new Error();
@@ -423,7 +423,7 @@ class Node {
                     this.peers[Object.keys(peers)[i]] = { websocket: websocket, address: peers[Object.keys(peers)[i]] };
                 else {
                     let ws = new ws_1.WebSocket(Object.keys(peers)[i]);
-                    ws.send(new utility_1.Json().stringify(new class_1.Command('Add_Peer')));
+                    ws.send(utility_1.Json.stringify(new class_1.Command('Add_Peer')));
                     this.peers[Object.keys(peers)[i]] = { websocket: ws, address: peers[Object.keys(peers)[i]] };
                 }
         });

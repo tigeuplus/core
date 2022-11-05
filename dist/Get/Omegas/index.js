@@ -51,7 +51,7 @@ time) {
             node.once('message', onMessage);
         });
         node.once('message', onMessage);
-        node.send(new utility_1.Json().stringify(new class_1.Command('Get_omegas')));
+        node.send(utility_1.Json.stringify(new class_1.Command('Get_omegas')));
     });
 }
 exports.getOmegas = getOmegas;

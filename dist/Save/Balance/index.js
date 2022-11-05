@@ -48,7 +48,7 @@ balance,
  * 경로
  */
 storage) {
-    (0, fs_1.writeFileSync)(path.join(storage, 'balances', `${address}.json`), new utility_1.Json().stringify(balance), { encoding: 'utf8' });
+    (0, fs_1.writeFileSync)(path.join(storage, 'balances', `${address}.json`), utility_1.Json.stringify(balance), { encoding: 'utf8' });
 }
 exports.saveBalance = saveBalance;
 //# sourceMappingURL=index.js.map

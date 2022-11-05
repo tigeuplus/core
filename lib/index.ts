@@ -130,7 +130,7 @@ export class Node
         scheduleJob('3 * * * * *', async(): Promise<void> =>
         {
             this.deleted = []
-            let spiders: { [ index: string ]: Spider } = anyToSpiders(new Json().parse(new Json().stringify(this.cobweb.spiders)))!
+            let spiders: { [ index: string ]: Spider } = anyToSpiders(Json.parse(Json.stringify(this.cobweb.spiders)))!
             for (let i: number = 0; Object.keys(spiders).length; i ++)
                 if (spiders[Object.keys(spiders)[i]].spiders.length >= 100)
                 {
@@ -199,7 +199,7 @@ export class Node
                         }
 
                         if (save)
-                            writeFileSync(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), new Json().stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' } )
+                            writeFileSync(path.join(__dirname, 'wallet', 'transactions', `${spiders[Object.keys(spiders)[i]].transaction.hash}}.json`), Json.stringify(spiders[Object.keys(spiders)[i]].transaction), { encoding: 'utf8' } )
                     }
                     
                     this.deleted.push(Object.keys(spiders)[i])
@@ -236,7 +236,7 @@ export class Node
             this.cobweb.add(transaction)
             this.omegas = transaction.targets
             
-            this.broadcast(new Json().stringify(new Command('Add_Transaction', transaction)))
+            this.broadcast(Json.stringify(new Command('Add_Transaction', transaction)))
         }
     }
 
@@ -337,7 +337,7 @@ export class Node
     private async onConnection(websocket: WebSocket, request: IncomingMessage): Promise<void>
     {
         websocket.on('close', (): void => this.onClose(request.headers.host!))
-        websocket.on('message', async (data: RawData): Promise<void> => this.onMessage(websocket, `ws://${request.headers.host!}`, new Json().parse(data.toString('utf8'))))
+        websocket.on('message', async (data: RawData): Promise<void> => this.onMessage(websocket, `ws://${request.headers.host!}`, Json.parse(data.toString('utf8'))))
     }
 
     private async onMessage(websocket: WebSocket, url: string, data: any): Promise<void>
@@ -358,15 +358,15 @@ export class Node
                     for (let i: number = 0; i < Object.keys(this.peers).length; i ++)
                         peers[Object.keys(this.peers)[i]] = this.peers[Object.keys(this.peers)[i]].address
 
-                    return websocket.send(new Json().stringify(new Command('Get_Peers_Result', peers)))
+                    return websocket.send(Json.stringify(new Command('Get_Peers_Result', peers)))
 
                 case 'Get_Balances':
                     let balances: { [ index: string ]: bigint } = {}
                     let files: string[] = readdirSync(path.join(this.storage, 'balances'))
                     for (let i: number = 0; i < files.length; i ++)
-                        balances[files[i].split('.')[0]] = new Json().parse(readFileSync(path.join(this.storage, 'balances', files[i]), { encoding: 'utf8' }))
+                        balances[files[i].split('.')[0]] = Json.parse(readFileSync(path.join(this.storage, 'balances', files[i]), { encoding: 'utf8' }))
 
-                    return websocket.send(new Json().stringify(new Command('Get_Balances_Result', balances)))
+                    return websocket.send(Json.stringify(new Command('Get_Balances_Result', balances)))
 
                 case 'Add_Transaction':
                     let transaction: Transaction | undefined = anyToTransaction(command.data)
@@ -380,10 +380,10 @@ export class Node
                     break
 
                 case 'Get_omegas':
-                    return websocket.send(new Json().stringify(new Command('Get_omegas_Result', this.omegas)))
+                    return websocket.send(Json.stringify(new Command('Get_omegas_Result', this.omegas)))
 
                 case 'Get_Deleted':
-                    return websocket.send(new Json().stringify(new Command('Get_Deleted_Result', this.deleted)))
+                    return websocket.send(Json.stringify(new Command('Get_Deleted_Result', this.deleted)))
             }
     }
 
@@ -400,7 +400,7 @@ export class Node
          */
         transaction: Transaction): boolean
     {
-        let deleted: string[] = new Json().parse(new Json().stringify(this.deleted))
+        let deleted: string[] = Json.parse(Json.stringify(this.deleted))
         for (let i: number = 0; i < transaction.targets.length; i ++)
             if (!this.cobweb.spiders[transaction.targets[i]])
                 if (!deleted.find((s: string) => s === transaction.targets[i]))
@@ -487,7 +487,7 @@ export class Node
                 if (Object.keys(balances)[i] === this.address)
                     this.balance = balances[Object.keys(balances)[i]]
 
-                writeFileSync(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), new Json().stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' })
+                writeFileSync(path.join(this.storage, 'balances', `${Object.keys(balances)[i]}.json`), Json.stringify(balances[Object.keys(balances)[i]]), { encoding: 'utf8' })
             }
         else
             throw new Error()
@@ -503,7 +503,7 @@ export class Node
                 else
                 {
                     let ws: WebSocket = new WebSocket(Object.keys(peers)[i])
-                    ws.send(new Json().stringify(new Command('Add_Peer')))
+                    ws.send(Json.stringify(new Command('Add_Peer')))
 
                     this.peers[Object.keys(peers)[i]] = { websocket: ws, address: peers[Object.keys(peers)[i]] }
                 }
